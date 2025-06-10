@@ -1,5 +1,0 @@
-bd.jdbc.url=jdbc:oracle:thin:@charlemagne.iutnc.univ-lorraine.fr:1521:infodb
-bd.jdbc.user=
-bd.jdbc.password=
-bd.rmi.name=ServiceBD
-bd.rmi.port=1234
