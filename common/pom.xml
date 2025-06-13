@@ -19,5 +19,9 @@
 
     <dependencies>
         <!-- si biblio mettre ici-->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+        </dependency>
     </dependencies>
 </project>

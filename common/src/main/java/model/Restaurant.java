@@ -2,9 +2,7 @@ package model;
 
 import java.io.Serializable;
 
-/**
- * Classe représentant un restaurant
- */
+
 public class Restaurant implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -15,11 +13,9 @@ public class Restaurant implements Serializable {
     private double latitude;
     private double longitude;
 
-    // Constructeur par défaut
     public Restaurant() {
     }
 
-    // Constructeur avec tous les paramètres
     public Restaurant(int id, String nom, String adresse, String telephone,
                       double latitude, double longitude) {
         this.id = id;
@@ -30,7 +26,6 @@ public class Restaurant implements Serializable {
         this.longitude = longitude;
     }
 
-    // Getters et Setters
     public int getId() {
         return id;
     }

@@ -3,9 +3,7 @@ package model;
 import java.io.Serializable;
 import java.util.Date;
 
-/**
- * Classe représentant une réservation
- */
+
 public class Reservation implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -17,11 +15,9 @@ public class Reservation implements Serializable {
     private int nbConvives;
     private Date dateReservation;
 
-    // Constructeur par défaut
     public Reservation() {
     }
 
-    // Constructeur avec tous les paramètres
     public Reservation(int id, int tableId, String nomClient, String prenomClient,
                        String telephone, int nbConvives, Date dateReservation) {
         this.id = id;
@@ -33,7 +29,6 @@ public class Reservation implements Serializable {
         this.dateReservation = dateReservation;
     }
 
-    // Getters et Setters
     public int getId() {
         return id;
     }

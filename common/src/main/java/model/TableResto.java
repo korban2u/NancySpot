@@ -2,9 +2,7 @@ package model;
 
 import java.io.Serializable;
 
-/**
- * Classe représentant une table de restaurant
- */
+
 public class TableResto implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -14,11 +12,9 @@ public class TableResto implements Serializable {
     private int nbPlaces;
     private String statut; // "libre" ou "occupee"
 
-    // Constructeur par défaut
     public TableResto() {
     }
 
-    // Constructeur avec tous les paramètres
     public TableResto(int id, int restaurantId, int numeroTable,
                       int nbPlaces, String statut) {
         this.id = id;
@@ -28,7 +24,6 @@ public class TableResto implements Serializable {
         this.statut = statut;
     }
 
-    // Getters et Setters
     public int getId() {
         return id;
     }
