@@ -6,45 +6,32 @@ import interfaces.ServiceCentral;
 import org.json.JSONObject;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
+import java.rmi.server.RemoteServer;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
-/**
- * Implémentation du service central - Centre de la topologie en étoile
- * Tous les autres services s'inscrivent auprès de lui
- */
-public class Serveur extends UnicastRemoteObject implements ServiceCentral {
+
+public class Serveur implements ServiceCentral {
 
     private static final Logger LOGGER = Logger.getLogger(Serveur.class.getName());
-    private static final long serialVersionUID = 1L;
 
-    // Services inscrits
     private ServiceBD serviceBD = null;
     private ServiceProxy serviceProxy = null;
 
-    // Informations des services
-    private String serviceBDHost = null;
-    private int serviceBDPort = -1;
-    private String serviceProxyHost = null;
-    private int serviceProxyPort = -1;
 
-    public Serveur() throws RemoteException {
-        super();
-        LOGGER.info("Service Central démarré - Centre de la topologie");
+    public Serveur() {
+        LOGGER.info("Service Central créé (pas encore exporté) - Centre de la topologie");
     }
 
     @Override
-    public boolean enregistrerServiceBD(ServiceBD serviceBD, String host, int port) throws RemoteException {
+    public boolean enregistrerServiceBD(ServiceBD serviceBD) throws RemoteException {
         try {
-            // Tester la connectivité
             serviceBD.ping();
 
             this.serviceBD = serviceBD;
-            this.serviceBDHost = host;
-            this.serviceBDPort = port;
+            String serviceBDHost = RemoteServer.getClientHost();
 
-            LOGGER.info("Service BD inscrit : " + host + ":" + port);
+            LOGGER.info("Service BD inscrit : " + serviceBDHost);
             return true;
 
         } catch (Exception e) {
@@ -54,16 +41,14 @@ public class Serveur extends UnicastRemoteObject implements ServiceCentral {
     }
 
     @Override
-    public boolean enregistrerServiceProxy(ServiceProxy serviceProxy, String host, int port) throws RemoteException {
+    public boolean enregistrerServiceProxy(ServiceProxy serviceProxy) throws RemoteException {
         try {
-            // Tester la connectivité
             serviceProxy.ping();
 
             this.serviceProxy = serviceProxy;
-            this.serviceProxyHost = host;
-            this.serviceProxyPort = port;
+            String serviceProxyHost = RemoteServer.getClientHost();
 
-            LOGGER.info("Service Proxy inscrit : " + host + ":" + port);
+            LOGGER.info("Service Proxy inscrit : " + serviceProxyHost );
             return true;
 
         } catch (Exception e) {
@@ -78,15 +63,11 @@ public class Serveur extends UnicastRemoteObject implements ServiceCentral {
             switch (serviceType.toUpperCase()) {
                 case "BD":
                     serviceBD = null;
-                    serviceBDHost = null;
-                    serviceBDPort = -1;
                     LOGGER.info("Service BD désinscrit");
                     return true;
 
                 case "PROXY":
                     serviceProxy = null;
-                    serviceProxyHost = null;
-                    serviceProxyPort = -1;
                     LOGGER.info("Service Proxy désinscrit");
                     return true;
 
@@ -104,7 +85,6 @@ public class Serveur extends UnicastRemoteObject implements ServiceCentral {
     public String getEtatServices() throws RemoteException {
         JSONObject etat = new JSONObject();
 
-        // Vérifier Service BD
         boolean bdDisponible = false;
         if (serviceBD != null) {
             try {
@@ -116,7 +96,6 @@ public class Serveur extends UnicastRemoteObject implements ServiceCentral {
             }
         }
 
-        // Vérifier Service Proxy
         boolean proxyDisponible = false;
         if (serviceProxy != null) {
             try {
@@ -129,21 +108,16 @@ public class Serveur extends UnicastRemoteObject implements ServiceCentral {
         }
 
         etat.put("serviceBD", new JSONObject()
-                .put("disponible", bdDisponible)
-                .put("host", serviceBDHost)
-                .put("port", serviceBDPort));
+                .put("disponible", bdDisponible));
 
         etat.put("serviceProxy", new JSONObject()
-                .put("disponible", proxyDisponible)
-                .put("host", serviceProxyHost)
-                .put("port", serviceProxyPort));
+                .put("disponible", proxyDisponible));
 
         etat.put("timestamp", System.currentTimeMillis());
 
         return etat.toString();
     }
 
-    // Méthodes pour accéder aux services (utilisées par HttpServerCentral)
     public String getAllRestaurants() throws RemoteException {
         if (serviceBD == null) {
             throw new RemoteException("Service BD non disponible");

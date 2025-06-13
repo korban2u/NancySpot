@@ -1,51 +1,108 @@
 package server;
 
 import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpsServer;
+import com.sun.net.httpserver.HttpsConfigurator;
+import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpContext;
 import rmi.Serveur;
 import handlers.*;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.security.KeyStore;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
+import java.util.logging.Level;
 
-/**
- * Serveur HTTP central utilisant la topologie en étoile
- * Utilise directement le ServiceCentralImpl pour accéder aux services inscrits
- */
+
 public class HttpServerCentral {
 
     private static final Logger LOGGER = Logger.getLogger(HttpServerCentral.class.getName());
 
     private final int port;
+    private final boolean httpsEnabled;
+    private final String keystorePath;
+    private final String keystorePassword;
     private HttpServer server;
     private final Serveur serviceCentral;
 
     public HttpServerCentral(int port, Serveur serviceCentral) {
-        this.port = port;
-        this.serviceCentral = serviceCentral;
+        this(port, serviceCentral, false, null, null);
     }
 
-    /**
-     * Démarrer le serveur HTTP
-     */
-    public void start() throws IOException {
+    public HttpServerCentral(int port, Serveur serviceCentral, boolean httpsEnabled,
+                             String keystorePath, String keystorePassword) {
+        this.port = port;
+        this.serviceCentral = serviceCentral;
+        this.httpsEnabled = httpsEnabled;
+        this.keystorePath = keystorePath;
+        this.keystorePassword = keystorePassword;
+    }
+
+
+    public void start() throws Exception {
+        if (httpsEnabled) {
+            startHttpsServer();
+        } else {
+            startHttpServer();
+        }
+    }
+
+
+    private void startHttpsServer() throws Exception {
+        LOGGER.info("Démarrage du serveur HTTPS sur le port " + port);
+
+        KeyStore keyStore = KeyStore.getInstance("JKS");
+        try (FileInputStream fis = new FileInputStream(keystorePath)) {
+            keyStore.load(fis, keystorePassword.toCharArray());
+        }
+
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+        kmf.init(keyStore, keystorePassword.toCharArray());
+
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+        tmf.init(keyStore);
+
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+
+        HttpsServer httpsServer = HttpsServer.create(new InetSocketAddress(port), 0);
+        httpsServer.setHttpsConfigurator(new HttpsConfigurator(sslContext) {
+            @Override
+            public void configure(HttpsParameters params) {
+                params.setSSLParameters(sslContext.getDefaultSSLParameters());
+            }
+        });
+
+        this.server = httpsServer;
+        configureServer();
+
+        LOGGER.info("Serveur HTTPS démarré sur https://172.22.152.208:" + port);
+    }
+
+
+    private void startHttpServer() throws IOException {
         LOGGER.info("Démarrage du serveur HTTP sur le port " + port);
 
-        // Créer le serveur HTTP
         server = HttpServer.create(new InetSocketAddress(port), 0);
+        configureServer();
 
-        // Configurer le pool de threads
+        LOGGER.info("Serveur HTTP démarré sur http://172.22.152.208:" + port);
+    }
+
+
+    private void configureServer() {
         server.setExecutor(Executors.newFixedThreadPool(10));
 
-        // Créer les contextes (routes)
         createContexts();
 
-        // Démarrer le serveur
         server.start();
 
-        LOGGER.info("Serveur HTTP démarré et en écoute sur le port " + port);
         LOGGER.info("Routes disponibles:");
         LOGGER.info("  GET  /restaurants");
         LOGGER.info("  GET  /tables/{restaurantId}");
@@ -55,35 +112,27 @@ public class HttpServerCentral {
         LOGGER.info("  GET  /services/etat");
     }
 
-    /**
-     * Créer les contextes (routes) HTTP
-     */
+
     private void createContexts() {
-        // Route pour récupérer les restaurants
+
         HttpContext restaurantsContext = server.createContext("/restaurants",
                 new RestaurantsHandler(serviceCentral));
 
-        // Route pour récupérer les tables libres
         HttpContext tablesContext = server.createContext("/tables",
                 new TablesHandler(serviceCentral));
 
-        // Route pour réserver une table
         HttpContext reserverContext = server.createContext("/reserver",
                 new ReserverHandler(serviceCentral));
 
-        // Route pour récupérer les données Vélib
         HttpContext velibContext = server.createContext("/velib",
                 new VelibHandler(serviceCentral));
 
-        // Route pour récupérer les incidents
         HttpContext incidentsContext = server.createContext("/incidents",
                 new IncidentsHandler(serviceCentral));
 
-        // Route pour l'état des services
         HttpContext etatContext = server.createContext("/services/etat",
                 new EtatServicesHandler(serviceCentral));
 
-        // Ajouter un filtre CORS à tous les contextes
         CorsFilter corsFilter = new CorsFilter();
         restaurantsContext.getFilters().add(corsFilter);
         tablesContext.getFilters().add(corsFilter);
@@ -95,14 +144,12 @@ public class HttpServerCentral {
         LOGGER.info("Contextes HTTP créés avec filtres CORS");
     }
 
-    /**
-     * Arrêter le serveur
-     */
+
     public void stop() {
         if (server != null) {
-            LOGGER.info("Arrêt du serveur HTTP...");
+            LOGGER.info("Arrêt du serveur...");
             server.stop(0);
-            LOGGER.info("Serveur HTTP arrêté");
+            LOGGER.info("Serveur arrêté");
         }
     }
 }

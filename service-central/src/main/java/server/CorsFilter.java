@@ -6,9 +6,7 @@ import com.sun.net.httpserver.HttpExchange;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-/**
- * Filtre pour ajouter les headers CORS nécessaires
- */
+
 public class CorsFilter extends Filter {
 
     private static final Logger LOGGER = Logger.getLogger(CorsFilter.class.getName());
@@ -20,7 +18,6 @@ public class CorsFilter extends Filter {
 
     @Override
     public void doFilter(HttpExchange exchange, Chain chain) throws IOException {
-        // Ajouter les headers CORS
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
         exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Accept");
