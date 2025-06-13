@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.nancy</groupId>
+        <artifactId>projet-sae</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>frontend</artifactId>
+    <packaging>war</packaging>
+
+    <name>Frontend - Interface Web Nancy</name>
+    <description>Interface web avec carte Leaflet pour l'application Nancy</description>
+
+    <properties>
+        <webapp.directory>${project.basedir}/src/main/webapp</webapp.directory>
+        <!-- Configuration par défaut -->
+        <service.central.host>localhost</service.central.host>
+        <service.central.port>8080</service.central.port>
+        <service.central.https.enabled>false</service.central.https.enabled>
+        <service.central.https.port>8443</service.central.https.port>
+    </properties>
+
+    <build>
+        <finalName>nancy-frontend</finalName>
+
+        <plugins>
+            <!-- Plugin WAR pour packager le frontend -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <warSourceDirectory>${webapp.directory}</warSourceDirectory>
+                    <webResources>
+                        <!-- Fichiers à filtrer (remplacement des variables Maven) -->
+                        <resource>
+                            <directory>${webapp.directory}</directory>
+                            <filtering>true</filtering>
+                            <includes>
+                                <include>js/config/constants.js</include>
+                                <include>**/*.html</include>
+                            </includes>
+                        </resource>
+                        <!-- Fichiers statiques (sans filtrage) -->
+                        <resource>
+                            <directory>${webapp.directory}</directory>
+                            <filtering>false</filtering>
+                            <excludes>
+                                <exclude>js/config/constants.js</exclude>
+                                <exclude>**/*.html</exclude>
+                            </excludes>
+                        </resource>
+                    </webResources>
+                </configuration>
+            </plugin>
+
+            <!-- Plugin pour copier et filtrer les fichiers JavaScript -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-and-filter-js</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/filtered-webapp</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${webapp.directory}</directory>
+                                    <filtering>true</filtering>
+                                    <includes>
+                                        <include>js/config/constants.js</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-static-files</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/filtered-webapp</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${webapp.directory}</directory>
+                                    <filtering>false</filtering>
+                                    <excludes>
+                                        <exclude>js/config/constants.js</exclude>
+                                    </excludes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Plugin de build helper pour définir des propriétés calculées -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.4.0</version>
+                <executions>
+                    <execution>
+                        <id>set-api-url</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>bsh-property</goal>
+                        </goals>
+                        <configuration>
+                            <source>
+                                // Construction de l'URL selon HTTPS activé ou non
+                                boolean httpsEnabled = Boolean.parseBoolean("${service.central.https.enabled}");
+                                String host = "${service.central.host}";
+                                String port = httpsEnabled ? "${service.central.https.port}" : "${service.central.port}";
+                                String protocol = httpsEnabled ? "https" : "http";
+
+                                api.base.url = protocol + "://" + host + ":" + port;
+                            </source>
+                            <properties>
+                                <property>api.base.url</property>
+                            </properties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!-- Profil pour développement local -->
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <service.central.host>localhost</service.central.host>
+                <service.central.port>8080</service.central.port>
+                <service.central.https.enabled>false</service.central.https.enabled>
+                <service.central.https.port>8443</service.central.https.port>
+            </properties>
+        </profile>
+
+        <!-- Profil pour développement local avec HTTPS -->
+        <profile>
+            <id>dev-https</id>
+            <properties>
+                <service.central.host>localhost</service.central.host>
+                <service.central.port>8080</service.central.port>
+                <service.central.https.enabled>true</service.central.https.enabled>
+                <service.central.https.port>8443</service.central.https.port>
+            </properties>
+        </profile>
+
+        <!-- Profil pour production -->
+        <profile>
+            <id>prod</id>
+            <properties>
+                <service.central.host>${env.CENTRAL_HOST}</service.central.host>
+                <service.central.port>${env.CENTRAL_HTTP_PORT}</service.central.port>
+                <service.central.https.enabled>${env.CENTRAL_HTTPS_ENABLED}</service.central.https.enabled>
+                <service.central.https.port>${env.CENTRAL_HTTPS_PORT}</service.central.https.port>
+            </properties>
+        </profile>
+
+        <!-- Profil pour les machines IUT -->
+        <profile>
+            <id>iut</id>
+            <properties>
+                <service.central.host>100.64.80.240</service.central.host>
+                <service.central.port>8080</service.central.port>
+                <service.central.https.enabled>true</service.central.https.enabled>
+                <service.central.https.port>8443</service.central.https.port>
+            </properties>
+        </profile>
+
+        <!-- Profil pour Docker -->
+        <profile>
+            <id>docker</id>
+            <properties>
+                <service.central.host>service-central</service.central.host>
+                <service.central.port>8080</service.central.port>
+                <service.central.https.enabled>true</service.central.https.enabled>
+                <service.central.https.port>8443</service.central.https.port>
+            </properties>
+        </profile>
+    </profiles>
+</project>

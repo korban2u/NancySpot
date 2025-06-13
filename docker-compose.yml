@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # Service Central (HTTP/HTTPS + RMI Registry)
+  service-central:
+    build:
+      context: .
+      dockerfile: service-central/Dockerfile
+    container_name: nancy-service-central
+    environment:
+      # RMI Configuration
+      - CENTRAL_RMI_PORT=${CENTRAL_RMI_PORT:-1098}
+      - CENTRAL_HOST=${CENTRAL_HOST:-service-central}
+
+      # HTTP Configuration
+      - CENTRAL_HTTP_PORT=${CENTRAL_HTTP_PORT:-8080}
+
+      # HTTPS Configuration
+      - CENTRAL_HTTPS_ENABLED=${CENTRAL_HTTPS_ENABLED:-true}
+      - CENTRAL_HTTPS_PORT=${CENTRAL_HTTPS_PORT:-8443}
+      - CENTRAL_KEYSTORE_PATH=${CENTRAL_KEYSTORE_PATH:-nancy-keystore.jks}
+      - CENTRAL_KEYSTORE_PASSWORD=${CENTRAL_KEYSTORE_PASSWORD:-password123}
+      - SSL_KEYSTORE_PASSWORD=${SSL_KEYSTORE_PASSWORD:-nancy2024}
+
+      # Java RMI Configuration
+      - JAVA_RMI_SERVER_HOSTNAME=${CENTRAL_HOST:-service-central}
+    ports:
+      - "${CENTRAL_HTTP_PORT:-8080}:8080"
+      - "${CENTRAL_HTTPS_PORT:-8443}:8443"
+      - "${CENTRAL_RMI_PORT:-1098}:1098"
+    networks:
+      - nancy-network
+    volumes:
+      - ./certs:/app/certs:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/services/etat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Service BD (Base de Données)
+  service-bd:
+    build:
+      context: .
+      dockerfile: service-bd/Dockerfile
+    container_name: nancy-service-bd
+    environment:
+      # Database Configuration
+      - BD_JDBC_URL=${BD_JDBC_URL}
+      - BD_JDBC_USER=${BD_JDBC_USER}
+      - BD_JDBC_PASSWORD=${BD_JDBC_PASSWORD}
+      - BD_RMI_NAME=${BD_RMI_NAME:-ServiceBD}
+      - BD_RMI_PORT=${BD_RMI_PORT:-1099}
+
+      # Service Central Configuration
+      - CENTRAL_HOST=${CENTRAL_HOST:-service-central}
+      - CENTRAL_RMI_PORT=${CENTRAL_RMI_PORT:-1098}
+
+      # Java RMI Configuration
+      - JAVA_RMI_SERVER_HOSTNAME=service-bd
+    networks:
+      - nancy-network
+    depends_on:
+      - service-central
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "java", "-cp", "/app/lib/*:/app/nancy-service-bd.jar", "rmi.HealthCheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Service Proxy (APIs Externes)
+  service-proxy:
+    build:
+      context: .
+      dockerfile: service-proxy/Dockerfile
+    container_name: nancy-service-proxy
+    environment:
+      # Proxy Configuration
+      - PROXY_USE_IUT_PROXY=${PROXY_USE_IUT_PROXY:-false}
+      - PROXY_IUT_HOST=${PROXY_IUT_HOST:-proxy.infra.univ-lorraine.fr}
+      - PROXY_IUT_PORT=${PROXY_IUT_PORT:-3128}
+
+      # Service Central Configuration
+      - CENTRAL_HOST=${CENTRAL_HOST:-service-central}
+      - CENTRAL_RMI_PORT=${CENTRAL_RMI_PORT:-1098}
+
+      # Java RMI Configuration
+      - JAVA_RMI_SERVER_HOSTNAME=service-proxy
+    networks:
+      - nancy-network
+    depends_on:
+      - service-central
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "java", "-cp", "/app/lib/*:/app/nancy-service-proxy.jar", "rmi.HealthCheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  nancy-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+volumes:
+  nancy-data:
+    driver: local

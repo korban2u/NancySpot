@@ -1,0 +1,145 @@
+/* CSS personnalisé minimal - Bootstrap fait le gros du travail */
+
+/* Variables pour les couleurs du projet */
+:root {
+    --nancy-primary: #0d6efd;
+    --nancy-success: #198754;
+    --nancy-warning: #ffc107;
+    --nancy-danger: #dc3545;
+}
+
+/* Navigation responsive améliorée */
+.nav-link.btn {
+    border: none;
+    color: var(--bs-gray-600);
+    transition: all 0.3s ease;
+}
+
+.nav-link.btn:hover,
+.nav-link.btn.active {
+    color: var(--nancy-primary);
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* Marqueurs de carte personnalisés */
+.custom-div-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+.marker-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    position: relative;
+    font-size: 18px;
+    color: white;
+    border: 2px solid white;
+}
+
+/* Flèche du marqueur */
+.marker-icon::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid;
+}
+
+/* Couleurs des marqueurs */
+.restaurant-icon {
+    background-color: var(--nancy-primary);
+}
+
+.restaurant-icon::after {
+    border-top-color: var(--nancy-primary);
+}
+
+.velib-icon {
+    background-color: var(--nancy-success);
+}
+
+.velib-icon::after {
+    border-top-color: var(--nancy-success);
+}
+
+.incident-icon {
+    background-color: var(--nancy-warning);
+    color: #000; /* Texte noir pour le warning jaune */
+}
+
+.incident-icon::after {
+    border-top-color: var(--nancy-warning);
+}
+
+/* Amélioration des popups Leaflet */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 0;
+}
+
+.leaflet-popup-content {
+    margin: 0;
+    min-width: 250px;
+}
+
+/* Modal de réservation */
+.modal.show {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Toast personnalisé */
+.toast {
+    min-width: 300px;
+}
+
+/* Contrôles de filtre améliorés */
+.btn-check:checked + .btn {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Responsive pour la carte */
+@media (max-width: 768px) {
+    #map {
+        height: calc(100vh - 180px) !important;
+    }
+
+    .marker-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+}
+
+/* Animation pour les éléments interactifs */
+.btn, .card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Amélioration de l'accessibilité */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Loading spinner personnalisé */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}

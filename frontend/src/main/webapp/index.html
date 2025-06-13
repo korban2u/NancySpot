@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nancy Interactive - Carte de la ville</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        .custom-div-icon { background: transparent !important; border: none !important; }
+        .marker-icon {
+            width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 18px; color: white; border: 2px solid white;
+        }
+        .marker-icon::after {
+            content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid;
+        }
+        .nav-link.btn { border: none; color: var(--bs-gray-600); transition: all 0.3s ease; }
+        .nav-link.btn:hover, .nav-link.btn.active { color: #0d6efd; background-color: rgba(13, 110, 253, 0.1); }
+        @media (max-width: 768px) { #map { height: calc(100vh - 180px) !important; } }
+    </style>
+</head>
+<body>
+
+
+<div id="app"></div>
+
+
+<!-- Template Layout Principal -->
+<script id="layout-template" type="text/x-handlebars-template">
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container-fluid">
+            <div class="navbar-brand d-flex align-items-center">
+                <i class="bi bi-geo-alt-fill text-primary me-2 fs-4"></i>
+                <h1 class="mb-0 h4 text-primary">Nancy Interactive</h1>
+            </div>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <button class="nav-link btn btn-link {{#if (eq activeTab 'carte')}}active{{/if}}" data-tab="carte">
+                            <i class="bi bi-map me-1"></i>Carte
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link btn btn-link {{#if (eq activeTab 'compte-rendu')}}active{{/if}}" data-tab="compte-rendu">
+                            <i class="bi bi-file-text me-1"></i>Compte-rendu
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contrôles carte -->
+    <div class="bg-light border-bottom py-2 {{#unless (eq activeTab 'carte')}}d-none{{/unless}}" id="map-controls">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="btn-group" role="group">
+                        <input type="checkbox" class="btn-check" id="filter-restaurants" data-type="restaurants" {{#if filters.restaurants}}checked{{/if}}>
+                        <label class="btn btn-outline-primary" for="filter-restaurants">
+                            <i class="bi bi-shop me-1"></i><span class="d-none d-md-inline">Restaurants</span>
+                        </label>
+
+                        <input type="checkbox" class="btn-check" id="filter-velib" data-type="velib" {{#if filters.velib}}checked{{/if}}>
+                        <label class="btn btn-outline-success" for="filter-velib">
+                            <i class="bi bi-bicycle me-1"></i><span class="d-none d-md-inline">Vélib</span>
+                        </label>
+
+                        <input type="checkbox" class="btn-check" id="filter-incidents" data-type="incidents" {{#if filters.incidents}}checked{{/if}}>
+                        <label class="btn btn-outline-warning" for="filter-incidents">
+                            <i class="bi bi-exclamation-triangle me-1"></i><span class="d-none d-md-inline">Incidents</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-success" id="refresh-button">
+                        <i class="bi bi-arrow-clockwise me-1"></i><span class="d-none d-md-inline">Actualiser</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenu -->
+    <main class="flex-fill position-relative">
+        {{{carteContent}}}
+        {{{compteRenduContent}}}
+    </main>
+
+    <!-- Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert">
+            <div class="toast-header">
+                <i id="toast-icon" class="bi me-2"></i>
+                <strong class="me-auto">Nancy Interactive</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toast-message"></div>
+        </div>
+    </div>
+</script>
+
+<!-- Template Carte -->
+<script id="carte-template" type="text/x-handlebars-template">
+    <div class="position-relative h-100">
+        <div id="map" style="height: calc(100vh - 140px);"></div>
+
+        {{#if loading}}
+        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white bg-opacity-75" style="z-index: 1000;">
+            <div class="text-center">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <p class="text-muted">Chargement...</p>
+            </div>
+        </div>
+        {{/if}}
+
+        <!-- Stats -->
+        <div class="position-absolute bottom-0 start-0 m-3" style="z-index: 400;">
+            <div class="card">
+                <div class="card-body p-2">
+                    <div class="d-flex gap-3 small">
+                        <span><i class="bi bi-shop text-primary"></i> 0</span>
+                        <span><i class="bi bi-bicycle text-success"></i> 0</span>
+                        <span><i class="bi bi-exclamation-triangle text-warning"></i> 0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+
+<!-- Template Popup Restaurant -->
+<script id="restaurant-popup-template" type="text/x-handlebars-template">
+    <div class="p-2">
+        <h6 class="fw-bold mb-2">{{nom}}</h6>
+        <div class="mb-3">
+            <p class="mb-1 small"><i class="bi bi-geo-alt text-muted me-1"></i>{{adresse}}</p>
+            <p class="mb-0 small"><i class="bi bi-telephone text-muted me-1"></i>{{telephone}}</p>
+        </div>
+        <button class="btn btn-primary btn-sm w-100 reserve-btn" data-restaurant-id="{{id}}" data-restaurant-name="{{nom}}">
+            <i class="bi bi-calendar-plus me-1"></i>Réserver une table
+        </button>
+    </div>
+</script>
+
+<!-- Template reservation -->
+<script id="reservation-form-template" type="text/x-handlebars-template">
+    <div class="modal fade show" style="display: block;" id="reservation-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-calendar-plus me-2"></i>Réservation - {{restaurantName}}</h5>
+                    <button type="button" class="btn-close" id="close-reservation"></button>
+                </div>
+                <form id="reservation-form" data-restaurant-id="{{restaurantId}}">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="nomClient" class="form-label">Nom *</label>
+                                <input type="text" class="form-control" id="nomClient" name="nomClient" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="prenomClient" class="form-label">Prénom *</label>
+                                <input type="text" class="form-control" id="prenomClient" name="prenomClient" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="telephone" class="form-label">Téléphone *</label>
+                                <input type="tel" class="form-control" id="telephone" name="telephone" pattern="[0-9]{10}" placeholder="0612345678" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="nbConvives" class="form-label">Nombre de personnes *</label>
+                                <input type="number" class="form-control" id="nbConvives" name="nbConvives" min="1" max="8" value="2" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="dateReservation" class="form-label">Date et heure *</label>
+                                <input type="datetime-local" class="form-control" id="dateReservation" name="dateReservation" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="tableId" class="form-label">Table disponible *</label>
+                                <select class="form-select" id="tableId" name="tableId" required>
+                                    <option value="">Chargement...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancel-reservation">Annuler</button>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Confirmer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+</script>
+
+<!-- Template pour les options de tables -->
+<script id="table-options-template" type="text/x-handlebars-template">
+    {{#if loading}}
+    <option value="">Chargement des tables...</option>
+    {{else if error}}
+    <option value="">Erreur lors du chargement</option>
+    {{else if empty}}
+    <option value="">Aucune table disponible</option>
+    {{else}}
+    <option value="">Choisir une table...</option>
+    {{#each tables}}
+    <option value="{{id}}">Table {{numeroTable}} ({{nbPlaces}} places)</option>
+    {{/each}}
+    {{/if}}
+</script>
+
+<!-- Template pour la liste des restaurants -->
+<script id="restaurant-list-template" type="text/x-handlebars-template">
+    <div class="restaurant-list">
+        {{#each restaurants}}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{nom}}</h5>
+                <p class="card-text">
+                    <i class="bi bi-geo-alt"></i> {{adresse}}<br>
+                    <i class="bi bi-telephone"></i> {{telephone}}
+                </p>
+                <button class="btn btn-primary reserve-btn"
+                        data-restaurant-id="{{id}}"
+                        data-restaurant-name="{{nom}}">
+                    Réserver
+                </button>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</script>
+
+<!-- Template Popup Vélib -->
+<script id="velib-popup-template" type="text/x-handlebars-template">
+    <div class="p-2">
+        <h6 class="fw-bold mb-2">{{nom}}</h6>
+        <div class="mb-3">
+            <span class="badge {{#if estOuverte}}bg-success{{else}}bg-danger{{/if}}">
+                <i class="bi {{#if estOuverte}}bi-check-circle{{else}}bi-x-circle{{/if}} me-1"></i>
+                {{#if estOuverte}}Ouverte{{else}}Fermée{{/if}}
+            </span>
+        </div>
+        {{#if estOuverte}}
+        <div class="row g-2">
+            <div class="col-6">
+                <div class="card bg-primary bg-opacity-10">
+                    <div class="card-body p-2 text-center">
+                        <i class="bi bi-bicycle text-primary fs-4"></i>
+                        <div class="fw-bold">{{velosDisponibles}}</div>
+                        <small class="text-muted">vélos</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card bg-success bg-opacity-10">
+                    <div class="card-body p-2 text-center">
+                        <i class="bi bi-p-square text-success fs-4"></i>
+                        <div class="fw-bold">{{placesDisponibles}}</div>
+                        <small class="text-muted">places</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{/if}}
+    </div>
+</script>
+
+<!-- Template pour la liste des stations Vélib -->
+<script id="velib-list-template" type="text/x-handlebars-template">
+    <div class="velib-list">
+        {{#each stations}}
+        <div class="card mb-2">
+            <div class="card-body p-3">
+                <h6 class="card-title">{{nom}}</h6>
+                <div class="row">
+                    <div class="col-6">
+                        <span class="badge bg-primary">{{velosDisponibles}} vélos</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="badge bg-success">{{placesDisponibles}} places</span>
+                    </div>
+                </div>
+                <span class="badge {{#if estOuverte}}bg-success{{else}}bg-danger{{/if}} mt-2">
+                        {{#if estOuverte}}Ouverte{{else}}Fermée{{/if}}
+                    </span>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</script>
+
+
+<!-- Template Popup Incident -->
+<script id="incident-popup-template" type="text/x-handlebars-template">
+    <div class="p-2">
+        <h6 class="fw-bold mb-2">{{titre}}</h6>
+        <div class="mb-2">
+            <span class="badge bg-warning me-1">{{typeLabel}}</span>
+            <span class="badge {{#if (eq impact 'faible')}}bg-success{{/if}}{{#if (eq impact 'moyen')}}bg-warning{{/if}}{{#if (eq impact 'fort')}}bg-danger{{/if}}">
+                Impact {{impact}}
+            </span>
+        </div>
+        <p class="small mb-2">{{description}}</p>
+        <div class="small text-muted">
+            <i class="bi bi-clock me-1"></i>Du {{dateDebut}} au {{dateFin}}
+        </div>
+    </div>
+</script>
+
+<!-- Template pour la liste des incidents -->
+<script id="incident-list-template" type="text/x-handlebars-template">
+    <div class="incident-list">
+        {{#each incidents}}
+        <div class="card mb-2">
+            <div class="card-body p-3">
+                <h6 class="card-title">{{titre}}</h6>
+                <p class="card-text small">{{description}}</p>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-warning">{{typeLabel}}</span>
+                    <span class="badge {{#if (eq impact 'faible')}}bg-success{{/if}}{{#if (eq impact 'moyen')}}bg-warning{{/if}}{{#if (eq impact 'fort')}}bg-danger{{/if}}">
+                            Impact {{impact}}
+                        </span>
+                </div>
+                <small class="text-muted">
+                    Du {{dateDebut}} au {{dateFin}}
+                </small>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</script>
+
+<!-- Template pour les statistiques -->
+<script id="stats-template" type="text/x-handlebars-template">
+    <div class="d-flex gap-3 small">
+        <span><i class="bi bi-shop text-primary"></i> {{restaurantsCount}}</span>
+        <span><i class="bi bi-bicycle text-success"></i> {{velibCount}}</span>
+        <span><i class="bi bi-exclamation-triangle text-warning"></i> {{incidentsCount}}</span>
+    </div>
+</script>
+
+<!-- Template pour les messages d'état -->
+<script id="status-message-template" type="text/x-handlebars-template">
+    <div class="alert alert-{{type}} d-flex align-items-center" role="alert">
+        <i class="bi {{icon}} me-2"></i>
+        <div>
+            <strong>{{title}}</strong>
+            {{#if message}}
+            <br>{{message}}
+            {{/if}}
+        </div>
+    </div>
+</script>
+
+
+<!-- Template Compte-rendu -->
+<script id="compte-rendu-template" type="text/x-handlebars-template">
+    <div class="container my-4">
+        <div class="text-center mb-5">
+            <h2 class="text-primary">Compte-rendu du Projet</h2>
+            <p class="text-muted">Application Répartie - Nancy Interactive</p>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title mb-0"><i class="bi bi-diagram-3 me-2"></i>Architecture</h3>
+            </div>
+            <div class="card-body">
+                <p>Architecture multi-tiers avec Frontend modulaire :</p>
+                <ul>
+                    <li><strong>Frontend :</strong> JavaScript ES6 modules + Bootstrap + Handlebars</li>
+                    <li><strong>Service Central :</strong> HTTP/HTTPS + RMI Registry</li>
+                    <li><strong>Service BD :</strong> Oracle + RMI</li>
+                    <li><strong>Service Proxy :</strong> APIs externes + RMI</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0"><i class="bi bi-code-slash me-2"></i>Fonctionnalités</h3>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="bi bi-shop text-primary fs-4"></i>
+                            </div>
+                            <div>
+                                <h6>Restaurants</h6>
+                                <p class="small text-muted mb-0">Réservation en temps réel</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="bi bi-bicycle text-success fs-4"></i>
+                            </div>
+                            <div>
+                                <h6>Vélib</h6>
+                                <p class="small text-muted mb-0">Disponibilité en direct</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
+                            </div>
+                            <div>
+                                <h6>Incidents</h6>
+                                <p class="small text-muted mb-0">Trafic et travaux</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<!-- Template Compte-rendu avec statistiques -->
+<script id="compte-rendu-enrichi-template" type="text/x-handlebars-template">
+    <div class="container my-4">
+        <div class="text-center mb-5">
+            <h2 class="text-primary">Compte-rendu du Projet</h2>
+            <p class="text-muted">Application Répartie - Nancy Interactive</p>
+        </div>
+
+        <!-- Statistiques -->
+        {{#if stats}}
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-shop fs-1 text-primary"></i>
+                        <h3 class="mt-2">{{stats.restaurants}}</h3>
+                        <p class="text-muted">Restaurants</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-bicycle fs-1 text-success"></i>
+                        <h3 class="mt-2">{{stats.velib}}</h3>
+                        <p class="text-muted">Stations Vélib</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+                        <h3 class="mt-2">{{stats.incidents}}</h3>
+                        <p class="text-muted">Incidents</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{/if}}
+
+        <!-- Architecture -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title mb-0"><i class="bi bi-diagram-3 me-2"></i>Architecture</h3>
+            </div>
+            <div class="card-body">
+                <p>Architecture multi-tiers avec Frontend modulaire :</p>
+                <ul>
+                    <li><strong>Frontend :</strong> JavaScript ES6 modules + Bootstrap + Handlebars</li>
+                    <li><strong>Service Central :</strong> HTTP/HTTPS + RMI Registry</li>
+                    <li><strong>Service BD :</strong> Oracle + RMI</li>
+                    <li><strong>Service Proxy :</strong> APIs externes + RMI</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Fonctionnalités -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0"><i class="bi bi-code-slash me-2"></i>Fonctionnalités</h3>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="bi bi-shop text-primary fs-4"></i>
+                            </div>
+                            <div>
+                                <h6>Restaurants</h6>
+                                <p class="small text-muted mb-0">Réservation en temps réel avec templates Handlebars</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="bi bi-bicycle text-success fs-4"></i>
+                            </div>
+                            <div>
+                                <h6>Vélib</h6>
+                                <p class="small text-muted mb-0">Disponibilité en direct via API externe</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
+                            </div>
+                            <div>
+                                <h6>Incidents</h6>
+                                <p class="small text-muted mb-0">Trafic et travaux en temps réel</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+
+<!-- Bootstrap JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Handlebars JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.8/handlebars.min.js"></script>
+
+<!-- Main -->
+<script type="module" src="js/app.js"></script>
+
+</body>
+</html>
