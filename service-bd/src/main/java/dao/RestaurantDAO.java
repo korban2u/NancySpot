@@ -10,9 +10,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
-/**
- * DAO pour gérer les restaurants et les réservations
- */
+
 public class RestaurantDAO {
 
     private static final Logger LOGGER = Logger.getLogger(RestaurantDAO.class.getName());
@@ -27,9 +25,7 @@ public class RestaurantDAO {
         this.dbPassword = dbPassword;
     }
 
-    /**
-     * Récupérer tous les restaurants
-     */
+
     public List<Restaurant> findAll() throws SQLException {
         List<Restaurant> restaurants = new ArrayList<>();
         String sql = "SELECT id, nom, adresse, telephone, latitude, longitude FROM restaurant ORDER BY nom";
@@ -60,9 +56,7 @@ public class RestaurantDAO {
         return restaurants;
     }
 
-    /**
-     * Récupérer les tables libres d'un restaurant
-     */
+
     public List<TableResto> findTablesLibres(int restaurantId) throws SQLException {
         List<TableResto> tables = new ArrayList<>();
         String sql = "SELECT id, restaurant_id, numero_table, nb_places, statut " +
@@ -98,9 +92,7 @@ public class RestaurantDAO {
         return tables;
     }
 
-    /**
-     * Effectuer une réservation avec gestion des transactions
-     */
+
     public boolean reserverTable(Reservation reservation) throws SQLException {
         Connection conn = null;
         PreparedStatement pstmtCheck = null;
@@ -110,10 +102,8 @@ public class RestaurantDAO {
 
         try {
             conn = getConnection();
-            // Désactiver l'auto-commit pour gérer la transaction manuellement
             conn.setAutoCommit(false);
 
-            // 1. Vérifier que la table est toujours libre (avec verrouillage)
             String sqlCheck = "SELECT statut FROM tables_resto WHERE id = ? FOR UPDATE";
             pstmtCheck = conn.prepareStatement(sqlCheck);
             pstmtCheck.setInt(1, reservation.getTableId());
@@ -204,16 +194,12 @@ public class RestaurantDAO {
         }
     }
 
-    /**
-     * Obtenir une connexion à la base de données
-     */
+
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
     }
 
-    /**
-     * Fermer une ressource silencieusement
-     */
+
     private void closeQuietly(AutoCloseable resource) {
         if (resource != null) {
             try {
