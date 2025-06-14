@@ -26,7 +26,7 @@ public class Main {
 
             Serveur serveur = new Serveur();
 
-            // EXPORTER l'objet RMI dans le main (comme votre exemple)
+            // EXPORTER l'objet RMI dans le main
             ServiceCentral serviceCentralStub = (ServiceCentral) UnicastRemoteObject.exportObject(serveur, 0);
 
             // Enregistrer dans le registry
