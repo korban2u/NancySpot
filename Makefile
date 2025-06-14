@@ -63,6 +63,9 @@ COMMON_JAR = common/target/common-1.0-SNAPSHOT.jar
 help: ## Afficher l'aide
 	@echo "$(GREEN)=== Nancy Spot - Commandes ===$(NC)"
 	@echo ""
+	@echo "$(YELLOW)JavaDoc:$(NC)"
+	@echo "  $(GREEN)javadoc$(NC)            générer la javadoc"
+	@echo ""
 	@echo "$(YELLOW)Compilation:$(NC)"
 	@echo "  $(GREEN)build$(NC)            Compiler tout"
 	@echo "  $(GREEN)build-central$(NC)    Compiler service-central uniquement"
@@ -92,6 +95,13 @@ help: ## Afficher l'aide
 	@echo "  $(GREEN)start-proxy$(NC), $(GREEN)stop-proxy$(NC), $(GREEN)logs-proxy$(NC)"
 
 # ==================== GESTION DES CERTIFICATS ====================
+javadoc: ## Générer et ouvrir la Javadoc
+	@echo "$(GREEN)=== Génération de la Javadoc ===$(NC)"
+	@mvn javadoc:aggregate
+	@echo "$(GREEN)✓ Documentation générée dans target/site/apidocs$(NC)"
+	@echo "$(BLUE)Ouverture...$(NC)"
+	@xdg-open target/reports/apidocs/index.html 2>/dev/null || echo "$(YELLOW)Ouvrez : target/reports/apidocs/index.html$(NC)"
+
 
 check-cert: ## Vérifier si le certificat existe
 	@echo "$(YELLOW)Vérification du certificat HTTPS...$(NC)"
