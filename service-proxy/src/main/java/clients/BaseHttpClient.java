@@ -10,6 +10,10 @@ import java.time.Duration;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+/**
+ * Client HTTP de base avec support du proxy réseau.
+ * Classe abstraite fournissant les fonctionnalités communes pour l'accès aux APIs externes.
+ */
 public abstract class BaseHttpClient {
 
     protected static final Logger LOGGER = Logger.getLogger(BaseHttpClient.class.getName());
@@ -19,6 +23,13 @@ public abstract class BaseHttpClient {
     private final String proxyHost;
     private final String proxyPort;
 
+    /**
+     * Constructeur avec configuration complète du proxy.
+     *
+     * @param useProxy indique si le proxy doit être utilisé
+     * @param proxyHost adresse du proxy
+     * @param proxyPort port du proxy
+     */
     public BaseHttpClient(boolean useProxy, String proxyHost, String proxyPort) {
         this.useProxy = useProxy;
         this.proxyHost = proxyHost != null ? proxyHost : "proxy.infra.univ-lorraine.fr";
@@ -33,10 +44,18 @@ public abstract class BaseHttpClient {
                 .build();
     }
 
+    /**
+     * Constructeur simplifié avec proxy par défaut.
+     *
+     * @param useProxy indique si le proxy doit être utilisé
+     */
     public BaseHttpClient(boolean useProxy) {
         this(useProxy, null, null);
     }
 
+    /**
+     * Configure les propriétés système pour le proxy.
+     */
     private void configureProxy() {
         System.setProperty("http.proxyHost", this.proxyHost);
         System.setProperty("http.proxyPort", this.proxyPort);
@@ -45,10 +64,25 @@ public abstract class BaseHttpClient {
         LOGGER.info("Proxy configuré : " + this.proxyHost + ":" + this.proxyPort);
     }
 
+    /**
+     * Récupère des données JSON depuis une URL avec timeout par défaut.
+     *
+     * @param url URL à interroger
+     * @return objet JSON de la réponse
+     * @throws Exception en cas d'erreur de réseau ou de parsing
+     */
     protected JSONObject fetchJsonData(String url) throws Exception {
         return fetchJsonData(url, 10);
     }
 
+    /**
+     * Récupère des données JSON depuis une URL avec timeout personnalisé.
+     *
+     * @param url URL à interroger
+     * @param timeoutSeconds timeout en secondes
+     * @return objet JSON de la réponse
+     * @throws Exception en cas d'erreur de réseau ou de parsing
+     */
     protected JSONObject fetchJsonData(String url, int timeoutSeconds) throws Exception {
         try {
             LOGGER.info("Appel API : " + url);
@@ -80,6 +114,13 @@ public abstract class BaseHttpClient {
         }
     }
 
+    /**
+     * Crée une réponse d'erreur standardisée.
+     *
+     * @param message message d'erreur principal
+     * @param e exception source
+     * @return JSON d'erreur formaté
+     */
     protected String createErrorResponse(String message, Exception e) {
         JSONObject error = new JSONObject();
         error.put("error", true);
@@ -88,6 +129,13 @@ public abstract class BaseHttpClient {
         return error.toString();
     }
 
+    /**
+     * Crée une réponse vide standardisée.
+     *
+     * @param dataType type de données (ex: "incidents")
+     * @param source source des données
+     * @return JSON de réponse vide formaté
+     */
     protected String createEmptyResponse(String dataType, String source) {
         JSONObject response = new JSONObject();
         response.put(dataType, new org.json.JSONArray());
@@ -97,10 +145,21 @@ public abstract class BaseHttpClient {
         return response.toString();
     }
 
+    /**
+     * Retourne la date/heure actuelle formatée.
+     *
+     * @return date/heure au format yyyy-MM-dd HH:mm:ss
+     */
     protected String getCurrentDateTime() {
         return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());
     }
 
+    /**
+     * Formate une date ISO en format lisible.
+     *
+     * @param isoDate date au format ISO
+     * @return date formatée ou date actuelle si erreur
+     */
     protected String formatDate(String isoDate) {
         try {
             if (isoDate == null || isoDate.trim().isEmpty()) {
@@ -118,14 +177,38 @@ public abstract class BaseHttpClient {
         }
     }
 
+    /**
+     * Met en forme une chaîne avec la première lettre en majuscule.
+     *
+     * @param str chaîne à formatter
+     * @return chaîne avec première lettre en majuscule
+     */
     private String capitalize(String str) {
         if (str == null || str.isEmpty()) return str;
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
+    /**
+     * Récupère les données spécifiques du service.
+     * Méthode abstraite à implémenter dans les classes filles.
+     *
+     * @return données du service au format JSON
+     */
     public abstract String getData();
 
+    /**
+     * Retourne le nom du service.
+     * Méthode abstraite à implémenter dans les classes filles.
+     *
+     * @return nom du service
+     */
     protected abstract String getServiceName();
 
+    /**
+     * Retourne les URLs du service.
+     * Méthode abstraite à implémenter dans les classes filles.
+     *
+     * @return tableau des URLs utilisées par le service
+     */
     protected abstract String[] getServiceUrls();
 }

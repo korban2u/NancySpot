@@ -5,18 +5,32 @@ import org.json.JSONObject;
 
 import java.util.logging.Level;
 
+/**
+ * Client pour récupérer les incidents de circulation de Nancy.
+ * Interroge l'API de la Métropole du Grand Nancy pour obtenir les données d'incidents.
+ */
 public class IncidentsClient extends BaseHttpClient {
 
     private static final String INCIDENTS_URL = "https://carto.g-ny.org/data/cifs/cifs_waze_v2.json";
 
-    // ✅ CORRECTION : Accepter la configuration du proxy
+    /**
+     * Constructeur avec configuration complète du proxy.
+     *
+     * @param useProxy indique si le proxy doit être utilisé
+     * @param proxyHost adresse du proxy
+     * @param proxyPort port du proxy
+     */
     public IncidentsClient(boolean useProxy, String proxyHost, String proxyPort) {
         super(useProxy, proxyHost, proxyPort);
         LOGGER.info("IncidentsClient initialisé (proxy: " + useProxy +
                 (useProxy ? " via " + proxyHost + ":" + proxyPort : "") + ")");
     }
 
-    // ✅ Méthode de compatibilité pour l'ancien constructeur
+    /**
+     * Constructeur de compatibilité avec proxy par défaut.
+     *
+     * @param useProxy indique si le proxy doit être utilisé
+     */
     public IncidentsClient(boolean useProxy) {
         super(useProxy);
         LOGGER.info("IncidentsClient initialisé (proxy: " + useProxy + ")");
@@ -37,6 +51,33 @@ public class IncidentsClient extends BaseHttpClient {
         return new String[]{INCIDENTS_URL};
     }
 
+    /**
+     * Récupère les incidents de circulation en temps réel.
+     *
+     * Format JSON retourné :
+     * {
+     *   "incidents": [
+     *     {
+     *       "id": "string",
+     *       "type": "travaux|accident|manifestation|embouteillage|deviation|incident",
+     *       "titre": "string",
+     *       "description": "string",
+     *       "latitude": number,
+     *       "longitude": number,
+     *       "impact": "fort|moyen|faible",
+     *       "dateDebut": "yyyy-MM-dd HH:mm:ss",
+     *       "dateFin": "yyyy-MM-dd HH:mm:ss",
+     *       "rue": "string (optionnel)",
+     *       "lieu": "string (optionnel)"
+     *     }
+     *   ],
+     *   "nombreIncidents": number,
+     *   "timestamp": number,
+     *   "source": "Métropole du Grand Nancy"
+     * }
+     *
+     * @return JSON contenant la liste des incidents formatés
+     */
     public String getIncidentsReels() {
         try {
             LOGGER.info("Récupération des données " + getServiceName() + "...");
@@ -59,6 +100,12 @@ public class IncidentsClient extends BaseHttpClient {
         }
     }
 
+    /**
+     * Traite et simplifie la liste des incidents bruts.
+     *
+     * @param incidentsArray tableau JSON des incidents bruts
+     * @return tableau JSON des incidents simplifiés
+     */
     private JSONArray processIncidents(JSONArray incidentsArray) {
         JSONArray incidentsSimplifies = new JSONArray();
 
@@ -78,6 +125,13 @@ public class IncidentsClient extends BaseHttpClient {
         return incidentsSimplifies;
     }
 
+    /**
+     * Crée un incident simplifié à partir des données brutes.
+     *
+     * @param incident données brutes de l'incident
+     * @param index index de l'incident pour l'ID
+     * @return incident simplifié ou null si données invalides
+     */
     private JSONObject createSimplifiedIncident(JSONObject incident, int index) {
         JSONObject location = incident.getJSONObject("location");
 
@@ -117,6 +171,12 @@ public class IncidentsClient extends BaseHttpClient {
         return incidentSimplifie;
     }
 
+    /**
+     * Détermine le type d'incident à partir des données.
+     *
+     * @param incident données de l'incident
+     * @return type d'incident standardisé
+     */
     private String determinerTypeIncident(JSONObject incident) {
         String type = incident.optString("type", "").toLowerCase();
         String description = incident.optString("description", "").toLowerCase();
@@ -138,6 +198,12 @@ public class IncidentsClient extends BaseHttpClient {
         }
     }
 
+    /**
+     * Détermine l'impact de l'incident sur la circulation.
+     *
+     * @param incident données de l'incident
+     * @return niveau d'impact (fort, moyen, faible)
+     */
     private String determinerImpact(JSONObject incident) {
         String description = incident.optString("description", "").toLowerCase();
 
@@ -152,6 +218,20 @@ public class IncidentsClient extends BaseHttpClient {
         }
     }
 
+    /**
+     * Construit la réponse finale des incidents au format JSON.
+     *
+     * Structure JSON générée :
+     * {
+     *   "incidents": JSONArray,
+     *   "nombreIncidents": number,
+     *   "timestamp": number,
+     *   "source": "Métropole du Grand Nancy"
+     * }
+     *
+     * @param incidents tableau des incidents traités
+     * @return JSON de réponse formaté
+     */
     private String buildIncidentsResponse(JSONArray incidents) {
         JSONObject response = new JSONObject();
         response.put("incidents", incidents);

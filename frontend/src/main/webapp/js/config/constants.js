@@ -11,9 +11,6 @@ export const NANCY_CONFIG = {
         /** Endpoint pour récupérer la liste des restaurants */
         RESTAURANTS: '/restaurants',
 
-        /** Endpoint pour récupérer les tables d'un restaurant (déprécié) */
-        TABLES: '/tables',
-
         /** Endpoint pour récupérer les tables libres pour un créneau spécifique */
         TABLES_LIBRES_CRENEAU: '/tables/libres',
 

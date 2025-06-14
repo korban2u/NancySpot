@@ -9,10 +9,20 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+/**
+ * Point d'entrée du service Proxy.
+ * Lance le service proxy pour l'accès aux APIs externes et l'enregistre auprès du service central.
+ */
 public class Main {
 
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
 
+    /**
+     * Point d'entrée principal du service Proxy.
+     * Charge la configuration, démarre le service et l'enregistre au service central.
+     *
+     * @param args arguments de ligne de commande (optionnel : fichier de config)
+     */
     public static void main(String[] args) {
         try {
             ConfigManager configManager = new ConfigManager(args.length > 0 ? args[0] : null);
@@ -50,16 +60,33 @@ public class Main {
         }
     }
 
+    /**
+     * Affiche la configuration dans les logs.
+     *
+     * @param config la configuration à afficher
+     */
     private static void logConfig(ProxyConfig config) {
         LOGGER.info("Utilisation proxy IUT: " + config.useIutProxy);
         LOGGER.info("Service Central: " + config.centralHost + ":" + config.centralPort);
     }
 
+    /**
+     * Se connecte au service central RMI.
+     *
+     * @param config la configuration contenant les paramètres de connexion
+     * @return le service central
+     * @throws Exception en cas d'erreur de connexion
+     */
     private static ServiceCentral connectToServiceCentral(ProxyConfig config) throws Exception {
         Registry registry = LocateRegistry.getRegistry(config.centralHost, config.centralPort);
         return (ServiceCentral) registry.lookup("ServiceCentral");
     }
 
+    /**
+     * Configure un hook d'arrêt pour se désenregistrer proprement.
+     *
+     * @param serviceCentral le service central pour la désinscription
+     */
     private static void addShutdownHook(ServiceCentral serviceCentral) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
