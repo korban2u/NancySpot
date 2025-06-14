@@ -12,26 +12,17 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-    <style>
-        .custom-div-icon { background: transparent !important; border: none !important; }
-        .marker-icon {
-            width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 18px; color: white; border: 2px solid white;
-        }
-        .marker-icon::after {
-            content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid;
-        }
-        .nav-link.btn { border: none; color: var(--bs-gray-600); transition: all 0.3s ease; }
-        .nav-link.btn:hover, .nav-link.btn.active { color: #0d6efd; background-color: rgba(13, 110, 253, 0.1); }
-        @media (max-width: 768px) { #map { height: calc(100vh - 180px) !important; } }
-    </style>
+    <!-- CSS personnalisé -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-
+<!-- Conteneur principal de l'application -->
 <div id="app"></div>
 
+<!-- ================================= -->
+<!-- TEMPLATES HANDLEBARS PRINCIPAUX  -->
+<!-- ================================= -->
 
 <!-- Template Layout Principal -->
 <script id="layout-template" type="text/x-handlebars-template">
@@ -143,109 +134,325 @@
     </div>
 </script>
 
+<!-- ================================= -->
+<!-- TEMPLATES RESTAURANTS ET RÉSERVATION -->
+<!-- ================================= -->
 
-<!-- Template Popup Restaurant -->
-<script id="restaurant-popup-template" type="text/x-handlebars-template">
-    <div class="p-2">
+<!-- Template Popup Restaurant Amélioré -->
+<script id="restaurant-popup-creneaux-template" type="text/x-handlebars-template">
+    <div class="p-3">
         <h6 class="fw-bold mb-2">{{nom}}</h6>
         <div class="mb-3">
             <p class="mb-1 small"><i class="bi bi-geo-alt text-muted me-1"></i>{{adresse}}</p>
             <p class="mb-0 small"><i class="bi bi-telephone text-muted me-1"></i>{{telephone}}</p>
         </div>
-        <button class="btn btn-primary btn-sm w-100 reserve-btn" data-restaurant-id="{{id}}" data-restaurant-name="{{nom}}">
+
+        <!-- Indicateur de créneaux disponibles -->
+        <div class="mb-3">
+            <small class="text-muted d-block mb-2">Créneaux disponibles:</small>
+            <div class="d-flex flex-wrap gap-1">
+                <span class="badge bg-primary">Déjeuner</span>
+                <span class="badge bg-primary">Dîner</span>
+                <span class="badge bg-secondary">Brunch</span>
+            </div>
+        </div>
+
+        <button class="btn btn-primary w-100 reserve-btn"
+                data-restaurant-id="{{id}}"
+                data-restaurant-name="{{nom}}">
             <i class="bi bi-calendar-plus me-1"></i>Réserver une table
         </button>
     </div>
 </script>
 
-<!-- Template reservation -->
-<script id="reservation-form-template" type="text/x-handlebars-template">
+<!-- Template principal de réservation avec sélection de créneaux -->
+<script id="reservation-form-creneaux-template" type="text/x-handlebars-template">
     <div class="modal fade show" style="display: block;" id="reservation-modal">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-calendar-plus me-2"></i>Réservation - {{restaurantName}}</h5>
-                    <button type="button" class="btn-close" id="close-reservation"></button>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-calendar-plus me-2"></i>Réservation - {{restaurantName}}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" id="close-reservation"></button>
                 </div>
-                <form id="reservation-form" data-restaurant-id="{{restaurantId}}">
-                    <div class="modal-body">
-                        <div class="row g-3">
+
+                <div class="modal-body">
+                    <!-- Étape 1: Sélection de la date -->
+                    <div class="step-container" id="step-date" style="display: block;">
+                        <h6 class="fw-bold mb-3">
+                            <span class="badge bg-primary me-2">1</span>Choisissez une date
+                        </h6>
+                        <div class="row">
                             <div class="col-md-6">
-                                <label for="nomClient" class="form-label">Nom *</label>
-                                <input type="text" class="form-control" id="nomClient" name="nomClient" required>
+                                <label for="dateReservation" class="form-label">Date de réservation</label>
+                                <input type="date" class="form-control form-control-lg"
+                                       id="dateReservation" name="dateReservation" required>
                             </div>
-                            <div class="col-md-6">
-                                <label for="prenomClient" class="form-label">Prénom *</label>
-                                <input type="text" class="form-control" id="prenomClient" name="prenomClient" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="telephone" class="form-label">Téléphone *</label>
-                                <input type="tel" class="form-control" id="telephone" name="telephone" pattern="[0-9]{10}" placeholder="0612345678" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="nbConvives" class="form-label">Nombre de personnes *</label>
-                                <input type="number" class="form-control" id="nbConvives" name="nbConvives" min="1" max="8" value="2" required>
-                            </div>
-                            <div class="col-12">
-                                <label for="dateReservation" class="form-label">Date et heure *</label>
-                                <input type="datetime-local" class="form-control" id="dateReservation" name="dateReservation" required>
-                            </div>
-                            <div class="col-12">
-                                <label for="tableId" class="form-label">Table disponible *</label>
-                                <select class="form-select" id="tableId" name="tableId" required>
-                                    <option value="">Chargement...</option>
-                                </select>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button type="button" class="btn btn-primary w-100" id="btn-next-date">
+                                    Voir les créneaux disponibles
+                                    <i class="bi bi-arrow-right ms-2"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" id="cancel-reservation">Annuler</button>
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Confirmer</button>
+
+                    <!-- Étape 2: Sélection du créneau -->
+                    <div class="step-container" id="step-creneau" style="display: none;">
+                        <h6 class="fw-bold mb-3">
+                            <span class="badge bg-primary me-2">2</span>Choisissez un créneau horaire
+                        </h6>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <small class="text-muted">Date sélectionnée:</small>
+                                <span class="fw-bold" id="selected-date-display"></span>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-back-date">
+                                <i class="bi bi-arrow-left me-1"></i>Changer la date
+                            </button>
+                        </div>
+
+                        <div id="creneaux-container">
+                            <!-- Les créneaux seront injectés ici -->
+                        </div>
+
+                        <div class="text-center mt-3" id="loading-creneaux" style="display: none;">
+                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                            Chargement des créneaux...
+                        </div>
                     </div>
-                </form>
+
+                    <!-- Étape 3: Sélection de la table et informations client -->
+                    <div class="step-container" id="step-table" style="display: none;">
+                        <h6 class="fw-bold mb-3">
+                            <span class="badge bg-primary me-2">3</span>Sélectionnez votre table et vos informations
+                        </h6>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <small class="text-muted">Créneau sélectionné:</small>
+                                <span class="fw-bold" id="selected-creneau-display"></span>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-back-creneau">
+                                <i class="bi bi-arrow-left me-1"></i>Changer le créneau
+                            </button>
+                        </div>
+
+                        <form id="reservation-form" data-restaurant-id="{{restaurantId}}">
+                            <input type="hidden" id="selectedCreneauId" name="creneauId">
+                            <input type="hidden" id="selectedDate" name="dateReservation">
+
+                            <!-- Sélection de la table -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Table disponible</label>
+                                <div id="tables-container">
+                                    <!-- Les tables seront injectées ici -->
+                                </div>
+                                <div class="text-center mt-3" id="loading-tables" style="display: none;">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                    Chargement des tables...
+                                </div>
+                            </div>
+
+                            <!-- Informations client -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="prenomClient" class="form-label">Prénom *</label>
+                                    <input type="text" class="form-control" id="prenomClient" name="prenomClient" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="nomClient" class="form-label">Nom *</label>
+                                    <input type="text" class="form-control" id="nomClient" name="nomClient" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="telephone" class="form-label">Téléphone *</label>
+                                    <input type="tel" class="form-control" id="telephone" name="telephone"
+                                           pattern="[0-9]{10}" placeholder="0612345678" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="nbConvives" class="form-label">Nombre de personnes *</label>
+                                    <input type="number" class="form-control" id="nbConvives" name="nbConvives"
+                                           min="1" max="20" value="2" required>
+                                    <div class="form-text" id="capacite-info">
+                                        <small class="text-muted">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Capacité de la table sélectionnée: <span id="table-capacity">-</span> personnes
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Footer avec boutons d'action -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancel-reservation">
+                        <i class="bi bi-x-circle me-1"></i>Annuler
+                    </button>
+                    <button type="submit" form="reservation-form" class="btn btn-success" id="confirm-reservation" disabled>
+                        <i class="bi bi-check-lg me-1"></i>Confirmer la réservation
+                    </button>
+                </div>
             </div>
         </div>
     </div>
     <div class="modal-backdrop fade show"></div>
 </script>
 
-<!-- Template pour les options de tables -->
-<script id="table-options-template" type="text/x-handlebars-template">
-    {{#if loading}}
-    <option value="">Chargement des tables...</option>
-    {{else if error}}
-    <option value="">Erreur lors du chargement</option>
-    {{else if empty}}
-    <option value="">Aucune table disponible</option>
-    {{else}}
-    <option value="">Choisir une table...</option>
-    {{#each tables}}
-    <option value="{{id}}">Table {{numeroTable}} ({{nbPlaces}} places)</option>
-    {{/each}}
-    {{/if}}
-</script>
-
-<!-- Template pour la liste des restaurants -->
-<script id="restaurant-list-template" type="text/x-handlebars-template">
-    <div class="restaurant-list">
-        {{#each restaurants}}
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">{{nom}}</h5>
-                <p class="card-text">
-                    <i class="bi bi-geo-alt"></i> {{adresse}}<br>
-                    <i class="bi bi-telephone"></i> {{telephone}}
-                </p>
-                <button class="btn btn-primary reserve-btn"
-                        data-restaurant-id="{{id}}"
-                        data-restaurant-name="{{nom}}">
-                    Réserver
-                </button>
+<!-- Template pour les créneaux disponibles -->
+<script id="creneaux-disponibles-template" type="text/x-handlebars-template">
+    {{#if creneaux.length}}
+    <div class="row g-3">
+        {{#each creneaux}}
+        <div class="col-md-6">
+            <div class="card creneau-card h-100" data-creneau-id="{{id}}" style="cursor: pointer;">
+                <div class="card-body text-center">
+                    <h6 class="card-title text-primary">{{libelle}}</h6>
+                    <p class="card-text">
+                        <i class="bi bi-clock text-muted me-1"></i>
+                        <span class="fw-bold">{{heureDebut}} - {{heureFin}}</span>
+                    </p>
+                    <small class="text-muted">Cliquez pour sélectionner</small>
+                </div>
             </div>
         </div>
         {{/each}}
     </div>
+    {{else}}
+    <div class="alert alert-warning text-center">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        Aucun créneau disponible pour cette date
+    </div>
+    {{/if}}
 </script>
+
+<!-- Template pour les tables avec statut -->
+<script id="tables-avec-statut-template" type="text/x-handlebars-template">
+    {{#if tables.length}}
+    <div class="row g-2">
+        {{#each tables}}
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card table-card h-100 {{#unless disponible}}table-occupee{{/unless}}"
+                 data-table-id="{{id}}"
+                 {{#if disponible}}data-selectable="true" style="cursor: pointer;"{{/if}}>
+            <div class="card-body text-center p-2">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-bold">Table {{numeroTable}}</span>
+                    {{#if disponible}}
+                    <i class="bi bi-check-circle text-success"></i>
+                    {{else}}
+                    <i class="bi bi-x-circle text-danger"></i>
+                    {{/if}}
+                </div>
+                <small class="text-muted">
+                    <i class="bi bi-people me-1"></i>{{nbPlaces}} places
+                </small>
+                <div class="mt-2">
+                    {{#if disponible}}
+                    <span class="badge bg-success">Disponible</span>
+                    {{else}}
+                    <span class="badge bg-danger">Occupée</span>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </div>
+    {{/each}}
+    </div>
+    <input type="hidden" id="tableId" name="tableId" required>
+    <div class="mt-3">
+        <small class="text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            Sélectionnez une table disponible (en vert) pour continuer
+        </small>
+    </div>
+    {{else}}
+    <div class="alert alert-warning text-center">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        Aucune table disponible pour ce créneau
+    </div>
+    {{/if}}
+</script>
+
+<!-- Template pour récapitulatif de réservation -->
+<script id="reservation-summary-template" type="text/x-handlebars-template">
+    <div class="card border-success">
+        <div class="card-header bg-success text-white">
+            <h6 class="mb-0">
+                <i class="bi bi-check-circle me-2"></i>Réservation confirmée
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12">
+                    <h6 class="text-success">Réservation #{{reservationId}}</h6>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted">Restaurant</small>
+                    <div class="fw-bold">{{restaurantName}}</div>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted">Date</small>
+                    <div class="fw-bold">{{dateReservation}}</div>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted">Créneau</small>
+                    <div class="fw-bold">{{creneau.libelle}} ({{creneau.heureDebut}}-{{creneau.heureFin}})</div>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted">Table</small>
+                    <div class="fw-bold">Table {{table.numeroTable}} ({{table.nbPlaces}} places)</div>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted">Client</small>
+                    <div class="fw-bold">{{prenomClient}} {{nomClient}}</div>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted">Convives</small>
+                    <div class="fw-bold">{{nbConvives}} personne(s)</div>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-top">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Votre table vous attendra à partir de {{creneau.heureDebut}}.
+                    Merci de vous présenter à l'heure pour profiter pleinement de votre créneau.
+                </small>
+            </div>
+        </div>
+    </div>
+</script>
+
+<!-- Template pour les messages d'état de réservation -->
+<script id="reservation-status-template" type="text/x-handlebars-template">
+    <div class="alert alert-{{type}} d-flex align-items-center" role="alert">
+        <i class="bi {{icon}} me-2"></i>
+        <div>
+            <strong>{{title}}</strong>
+            {{#if message}}
+            <div class="mt-1">{{message}}</div>
+            {{/if}}
+            {{#if details}}
+            <div class="mt-2">
+                <small>
+                    {{#each details}}
+                    <div>• {{this}}</div>
+                    {{/each}}
+                </small>
+            </div>
+            {{/if}}
+        </div>
+        {{#if showCloseButton}}
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        {{/if}}
+    </div>
+</script>
+
+<!-- ================================= -->
+<!-- TEMPLATES VÉLIB -->
+<!-- ================================= -->
 
 <!-- Template Popup Vélib -->
 <script id="velib-popup-template" type="text/x-handlebars-template">
@@ -282,30 +489,9 @@
     </div>
 </script>
 
-<!-- Template pour la liste des stations Vélib -->
-<script id="velib-list-template" type="text/x-handlebars-template">
-    <div class="velib-list">
-        {{#each stations}}
-        <div class="card mb-2">
-            <div class="card-body p-3">
-                <h6 class="card-title">{{nom}}</h6>
-                <div class="row">
-                    <div class="col-6">
-                        <span class="badge bg-primary">{{velosDisponibles}} vélos</span>
-                    </div>
-                    <div class="col-6">
-                        <span class="badge bg-success">{{placesDisponibles}} places</span>
-                    </div>
-                </div>
-                <span class="badge {{#if estOuverte}}bg-success{{else}}bg-danger{{/if}} mt-2">
-                        {{#if estOuverte}}Ouverte{{else}}Fermée{{/if}}
-                    </span>
-            </div>
-        </div>
-        {{/each}}
-    </div>
-</script>
-
+<!-- ================================= -->
+<!-- TEMPLATES INCIDENTS -->
+<!-- ================================= -->
 
 <!-- Template Popup Incident -->
 <script id="incident-popup-template" type="text/x-handlebars-template">
@@ -324,28 +510,9 @@
     </div>
 </script>
 
-<!-- Template pour la liste des incidents -->
-<script id="incident-list-template" type="text/x-handlebars-template">
-    <div class="incident-list">
-        {{#each incidents}}
-        <div class="card mb-2">
-            <div class="card-body p-3">
-                <h6 class="card-title">{{titre}}</h6>
-                <p class="card-text small">{{description}}</p>
-                <div class="d-flex gap-2">
-                    <span class="badge bg-warning">{{typeLabel}}</span>
-                    <span class="badge {{#if (eq impact 'faible')}}bg-success{{/if}}{{#if (eq impact 'moyen')}}bg-warning{{/if}}{{#if (eq impact 'fort')}}bg-danger{{/if}}">
-                            Impact {{impact}}
-                        </span>
-                </div>
-                <small class="text-muted">
-                    Du {{dateDebut}} au {{dateFin}}
-                </small>
-            </div>
-        </div>
-        {{/each}}
-    </div>
-</script>
+<!-- ================================= -->
+<!-- TEMPLATES UTILITAIRES -->
+<!-- ================================= -->
 
 <!-- Template pour les statistiques -->
 <script id="stats-template" type="text/x-handlebars-template">
@@ -356,19 +523,9 @@
     </div>
 </script>
 
-<!-- Template pour les messages d'état -->
-<script id="status-message-template" type="text/x-handlebars-template">
-    <div class="alert alert-{{type}} d-flex align-items-center" role="alert">
-        <i class="bi {{icon}} me-2"></i>
-        <div>
-            <strong>{{title}}</strong>
-            {{#if message}}
-            <br>{{message}}
-            {{/if}}
-        </div>
-    </div>
-</script>
-
+<!-- ================================= -->
+<!-- TEMPLATES COMPTE-RENDU -->
+<!-- ================================= -->
 
 <!-- Template Compte-rendu -->
 <script id="compte-rendu-template" type="text/x-handlebars-template">
@@ -406,7 +563,7 @@
                             </div>
                             <div>
                                 <h6>Restaurants</h6>
-                                <p class="small text-muted mb-0">Réservation en temps réel</p>
+                                <p class="small text-muted mb-0">Réservation en temps réel avec créneaux horaires</p>
                             </div>
                         </div>
                     </div>
@@ -417,7 +574,7 @@
                             </div>
                             <div>
                                 <h6>Vélib</h6>
-                                <p class="small text-muted mb-0">Disponibilité en direct</p>
+                                <p class="small text-muted mb-0">Disponibilité en direct via API externe</p>
                             </div>
                         </div>
                     </div>
@@ -428,7 +585,7 @@
                             </div>
                             <div>
                                 <h6>Incidents</h6>
-                                <p class="small text-muted mb-0">Trafic et travaux</p>
+                                <p class="small text-muted mb-0">Trafic et travaux en temps réel</p>
                             </div>
                         </div>
                     </div>
@@ -443,7 +600,7 @@
     <div class="container my-4">
         <div class="text-center mb-5">
             <h2 class="text-primary">Compte-rendu du Projet</h2>
-            <p class="text-muted">Application Répartie - Nancy Spot</p>
+            <p class="text-muted">Application Répartie - Nancy Spot avec Créneaux Horaires</p>
         </div>
 
         <!-- Statistiques -->
@@ -479,18 +636,73 @@
         </div>
         {{/if}}
 
+        <!-- Nouvelles fonctionnalités -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h3 class="card-title mb-0"><i class="bi bi-star me-2"></i>Nouvelles Fonctionnalités v2.0</h3>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="bi bi-clock text-primary fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-primary">Créneaux Horaires</h6>
+                                <p class="small mb-0">Réservation par créneaux : Déjeuner, Dîner, Brunch</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="bi bi-calendar-check text-success fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-success">Workflow de Réservation</h6>
+                                <p class="small mb-0">Processus en 3 étapes : Date → Créneau → Table</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="bi bi-shield-check text-warning fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-warning">Gestion des Conflits</h6>
+                                <p class="small mb-0">Validation transactionnelle et prévention des doublons</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="bi bi-graph-up text-info fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-info">Statut Temps Réel</h6>
+                                <p class="small mb-0">Disponibilité des tables par créneau en temps réel</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Architecture -->
         <div class="card mb-4">
             <div class="card-header">
                 <h3 class="card-title mb-0"><i class="bi bi-diagram-3 me-2"></i>Architecture</h3>
             </div>
             <div class="card-body">
-                <p>Architecture multi-tiers avec Frontend modulaire :</p>
+                <p>Architecture multi-tiers améliorée avec support des créneaux :</p>
                 <ul>
-                    <li><strong>Frontend :</strong> JavaScript ES6 modules + Bootstrap + Handlebars</li>
-                    <li><strong>Service Central :</strong> HTTP/HTTPS + RMI Registry</li>
-                    <li><strong>Service BD :</strong> Oracle + RMI</li>
-                    <li><strong>Service Proxy :</strong> APIs externes + RMI</li>
+                    <li><strong>Frontend :</strong> JavaScript ES6 modules + Bootstrap + Handlebars + Templates créneaux</li>
+                    <li><strong>Service Central :</strong> HTTP/HTTPS + RMI Registry + 12 nouveaux endpoints</li>
+                    <li><strong>Service BD :</strong> Oracle + RMI + Gestion transactionnelle des créneaux</li>
+                    <li><strong>Service Proxy :</strong> APIs externes + RMI (Vélib, Incidents)</li>
                 </ul>
             </div>
         </div>
@@ -498,7 +710,7 @@
         <!-- Fonctionnalités -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title mb-0"><i class="bi bi-code-slash me-2"></i>Fonctionnalités</h3>
+                <h3 class="card-title mb-0"><i class="bi bi-code-slash me-2"></i>Fonctionnalités Détaillées</h3>
             </div>
             <div class="card-body">
                 <div class="row g-3">
@@ -509,7 +721,11 @@
                             </div>
                             <div>
                                 <h6>Restaurants</h6>
-                                <p class="small text-muted mb-0">Réservation en temps réel avec templates Handlebars</p>
+                                <p class="small text-muted mb-0">
+                                    • Réservation par créneaux horaires<br>
+                                    • Gestion des conflits automatique<br>
+                                    • Interface de sélection visuelle
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -520,7 +736,11 @@
                             </div>
                             <div>
                                 <h6>Vélib</h6>
-                                <p class="small text-muted mb-0">Disponibilité en direct via API externe</p>
+                                <p class="small text-muted mb-0">
+                                    • API GBFS Cyclocity en direct<br>
+                                    • Statut temps réel des stations<br>
+                                    • Disponibilité vélos/places
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -531,7 +751,11 @@
                             </div>
                             <div>
                                 <h6>Incidents</h6>
-                                <p class="small text-muted mb-0">Trafic et travaux en temps réel</p>
+                                <p class="small text-muted mb-0">
+                                    • Données Grand Nancy en temps réel<br>
+                                    • Classification par impact<br>
+                                    • Localisation précise
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -540,7 +764,6 @@
         </div>
     </div>
 </script>
-
 
 <!-- Bootstrap JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -551,7 +774,7 @@
 <!-- Handlebars JavaScript -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.8/handlebars.min.js"></script>
 
-<!-- Main -->
+<!-- Application principale -->
 <script type="module" src="js/app.js"></script>
 
 </body>

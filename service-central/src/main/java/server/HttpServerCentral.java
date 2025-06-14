@@ -19,7 +19,13 @@ import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
-
+/**
+ * Serveur HTTP Central amélioré avec support des créneaux
+ * Version 2.0 avec nouveaux endpoints pour la gestion des créneaux horaires
+ *
+ * @author Nancy Spot Team
+ * @version 2.0 - Avec gestion des créneaux
+ */
 public class HttpServerCentral {
 
     private static final Logger LOGGER = Logger.getLogger(HttpServerCentral.class.getName());
@@ -44,7 +50,6 @@ public class HttpServerCentral {
         this.keystorePassword = keystorePassword;
     }
 
-
     public void start() throws Exception {
         if (httpsEnabled) {
             startHttpsServer();
@@ -52,7 +57,6 @@ public class HttpServerCentral {
             startHttpServer();
         }
     }
-
 
     private void startHttpsServer() throws Exception {
         LOGGER.info("Démarrage du serveur HTTPS sur le port " + port);
@@ -82,9 +86,8 @@ public class HttpServerCentral {
         this.server = httpsServer;
         configureServer();
 
-        LOGGER.info("Serveur HTTPS démarré sur https://172.22.152.208:" + port);
+        LOGGER.info("Serveur HTTPS démarré sur https://localhost:" + port);
     }
-
 
     private void startHttpServer() throws IOException {
         LOGGER.info("Démarrage du serveur HTTP sur le port " + port);
@@ -92,55 +95,106 @@ public class HttpServerCentral {
         server = HttpServer.create(new InetSocketAddress(port), 0);
         configureServer();
 
-        LOGGER.info("Serveur HTTP démarré sur http://172.22.152.208:" + port);
+        LOGGER.info("Serveur HTTP démarré sur http://localhost:" + port);
     }
-
 
     private void configureServer() {
         server.setExecutor(Executors.newFixedThreadPool(10));
-
         createContexts();
-
         server.start();
-
-        LOGGER.info("Routes disponibles:");
-        LOGGER.info("  GET  /restaurants");
-        LOGGER.info("  GET  /tables/{restaurantId}");
-        LOGGER.info("  POST /reserver");
-        LOGGER.info("  GET  /velib");
-        LOGGER.info("  GET  /incidents");
-        LOGGER.info("  GET  /services/etat");
+        logAvailableRoutes();
     }
 
-
+    /**
+     * Configuration de tous les contextes HTTP avec support des créneaux
+     */
     private void createContexts() {
+        CorsFilter corsFilter = new CorsFilter();
+
+        // ==================== ENDPOINTS RESTAURANTS ====================
 
         HttpContext restaurantsContext = server.createContext("/restaurants",
                 new RestaurantsHandler(serviceCentral));
+        restaurantsContext.getFilters().add(corsFilter);
 
-        HttpContext tablesContext = server.createContext("/tables",
-                new TablesHandler(serviceCentral));
+        // ==================== ENDPOINTS CRÉNEAUX ====================
 
+        HttpContext creneauxContext = server.createContext("/creneaux",
+                new CreneauxHandler(serviceCentral));
+        creneauxContext.getFilters().add(corsFilter);
+
+        // ==================== ENDPOINTS TABLES ====================
+
+        HttpContext tablesCreneauxContext = server.createContext("/tables/",
+                new TablesCreneauxHandler(serviceCentral));
+        tablesCreneauxContext.getFilters().add(corsFilter);
+
+        // ==================== ENDPOINTS RÉSERVATIONS ====================
+
+        // Endpoint principal de réservation
         HttpContext reserverContext = server.createContext("/reserver",
                 new ReserverHandler(serviceCentral));
+        reserverContext.getFilters().add(corsFilter);
 
+        // Endpoints de gestion des réservations
+        HttpContext reservationsContext = server.createContext("/reservations/",
+                new ReservationsHandler(serviceCentral));
+        reservationsContext.getFilters().add(corsFilter);
 
+        // ==================== ENDPOINTS EXTERNES ====================
+
+        // Incidents de circulation
         HttpContext incidentsContext = server.createContext("/incidents",
                 new IncidentsHandler(serviceCentral));
+        incidentsContext.getFilters().add(corsFilter);
 
+        // ==================== ENDPOINTS SYSTÈME ====================
+
+        // État des services
         HttpContext etatContext = server.createContext("/services/etat",
                 new EtatServicesHandler(serviceCentral));
-
-        CorsFilter corsFilter = new CorsFilter();
-        restaurantsContext.getFilters().add(corsFilter);
-        tablesContext.getFilters().add(corsFilter);
-        reserverContext.getFilters().add(corsFilter);
-        incidentsContext.getFilters().add(corsFilter);
         etatContext.getFilters().add(corsFilter);
+
+        // Endpoint de santé général
+        HttpContext healthContext = server.createContext("/health",
+                new HealthHandler(serviceCentral));
+        healthContext.getFilters().add(corsFilter);
 
         LOGGER.info("Contextes HTTP créés avec filtres CORS");
     }
 
+    /**
+     * Affiche toutes les routes disponibles dans les logs
+     */
+    private void logAvailableRoutes() {
+        LOGGER.info("=== ROUTES DISPONIBLES ===");
+
+        LOGGER.info("RESTAURANTS:");
+        LOGGER.info("  GET  /restaurants                     - Liste des restaurants");
+
+        LOGGER.info("CRÉNEAUX:");
+        LOGGER.info("  GET  /creneaux                        - Liste des créneaux disponibles");
+        LOGGER.info("  GET  /creneaux/{id}                   - Détails d'un créneau");
+
+        LOGGER.info("TABLES:");
+        LOGGER.info("  GET  /tables/libres/{restaurantId}/{date}/{creneauId}    - Tables libres pour un créneau");
+        LOGGER.info("  GET  /tables/statut/{restaurantId}/{date}/{creneauId}    - Statut de toutes les tables");
+        LOGGER.info("  GET  /tables/disponibilite/{tableId}/{date}/{creneauId} - Vérifier disponibilité d'une table");
+
+        LOGGER.info("RÉSERVATIONS:");
+        LOGGER.info("  POST /reserver                        - Effectuer une réservation");
+        LOGGER.info("  GET  /reservations/date/{restaurantId}/{date}           - Réservations d'une date");
+        LOGGER.info("  POST /reservations/annuler/{reservationId}              - Annuler une réservation");
+
+        LOGGER.info("EXTERNES:");
+        LOGGER.info("  GET  /incidents                       - Incidents de circulation");
+
+        LOGGER.info("SYSTÈME:");
+        LOGGER.info("  GET  /services/etat                   - État des services RMI");
+        LOGGER.info("  GET  /health                          - Santé générale du système");
+
+        LOGGER.info("=== SERVEUR OPÉRATIONNEL ===");
+    }
 
     public void stop() {
         if (server != null) {
