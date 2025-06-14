@@ -535,54 +535,13 @@ export class RestaurantManager {
     /**
      * Affiche le succès de la réservation
      */
+    /**
+     * Affiche le succès de la réservation - VERSION ULTRA SIMPLE
+     */
     showReservationSuccess(result) {
         this.hideReservationForm();
 
-        // Création du modal de succès
-        const creneau = this.creneaux.find(c => c.id === this.reservationState.selectedCreneauId);
-
-        const summaryData = {
-            reservationId: result.reservationId,
-            restaurantName: this.reservationState.restaurantName,
-            dateReservation: this.formatDate(this.reservationState.selectedDate),
-            creneau: creneau,
-            table: {
-                numeroTable: result.reservation?.table?.numeroTable || 'N/A',
-                nbPlaces: result.reservation?.table?.nbPlaces || 'N/A'
-            },
-            prenomClient: result.reservation?.prenomClient || '',
-            nomClient: result.reservation?.nomClient || '',
-            nbConvives: result.reservation?.nbConvives || 0
-        };
-
-        if (this.templates.reservationSummary) {
-            const summaryHtml = this.templates.reservationSummary(summaryData);
-
-            // Création d'un modal temporaire pour le succès
-            const successModal = `
-                <div class="modal fade show" style="display: block;" id="success-modal">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header border-0">
-                                <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
-                            </div>
-                            <div class="modal-body">
-                                ${summaryHtml}
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-primary" onclick="this.closest('.modal').remove()">
-                                    Fermer
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-backdrop fade show"></div>
-            `;
-
-            document.body.insertAdjacentHTML('beforeend', successModal);
-        }
-
+        // Simple toast de succès
         UIUtils.showToast('Réservation confirmée avec succès!', 'success');
     }
 
