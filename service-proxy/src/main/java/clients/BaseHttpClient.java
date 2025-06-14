@@ -19,7 +19,6 @@ public abstract class BaseHttpClient {
     private final String proxyHost;
     private final String proxyPort;
 
-    // ✅ CORRECTION : Accepter la configuration du proxy en paramètre
     public BaseHttpClient(boolean useProxy, String proxyHost, String proxyPort) {
         this.useProxy = useProxy;
         this.proxyHost = proxyHost != null ? proxyHost : "proxy.infra.univ-lorraine.fr";
