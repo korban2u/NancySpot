@@ -103,7 +103,13 @@ build-proxy: ## Compiler le service proxy
 
 build-frontend: ## Compiler le frontend
 	@echo "$(GREEN)=== Compilation Frontend ===$(NC)"
-	@cd frontend && mvn clean package -DskipTests
+	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
+		echo "$(YELLOW)Mode HTTPS détecté - URL: https://$(CENTRAL_HOST):$(CENTRAL_HTTPS_PORT)$(NC)"; \
+		cd frontend && mvn clean package -Pprod -Dcentral.host=$(CENTRAL_HOST) -Dcentral.https.port=$(CENTRAL_HTTPS_PORT) -DskipTests; \
+	else \
+		echo "$(YELLOW)Mode HTTP détecté - URL: http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)$(NC)"; \
+		cd frontend && mvn clean package -Pprod-http -Dcentral.host=$(CENTRAL_HOST) -Dcentral.http.port=$(CENTRAL_HTTP_PORT) -DskipTests; \
+	fi
 	@echo "$(GREEN)✓ Frontend compilé$(NC)"
 
 generate-configs: generate-config-central generate-config-bd generate-config-proxy
@@ -252,7 +258,15 @@ health: ## Test de santé des APIs
 		fi; \
 	done
 
-deploy-frontend: build-frontend ## Déployer le frontend sur webetu
+deploy-frontend: ## Déployer le frontend sur webetu
+	@echo "$(GREEN)=== Compilation Frontend pour production ===$(NC)"
+	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
+		echo "$(YELLOW)Mode HTTPS détecté - URL: https://$(CENTRAL_HOST):$(CENTRAL_HTTPS_PORT)$(NC)"; \
+		cd frontend && mvn clean package -Pprod -Dcentral.host=$(CENTRAL_HOST) -Dcentral.https.port=$(CENTRAL_HTTPS_PORT) -DskipTests; \
+	else \
+		echo "$(YELLOW)Mode HTTP détecté - URL: http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)$(NC)"; \
+		cd frontend && mvn clean package -Pprod-http -Dcentral.host=$(CENTRAL_HOST) -Dcentral.http.port=$(CENTRAL_HTTP_PORT) -DskipTests; \
+	fi
 	@echo "$(GREEN)=== Déploiement Frontend sur Webetu ===$(NC)"
 	@if [ -z "$(WEBETU_USER)" ]; then \
 		echo "$(RED)Erreur: WEBETU_USER non défini dans .env$(NC)"; \

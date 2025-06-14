@@ -19,6 +19,7 @@
 
     <properties>
         <webapp.directory>${project.basedir}/src/main/webapp</webapp.directory>
+        <target.webapp.directory>${project.build.directory}/webapp</target.webapp.directory>
         <!-- Variables d'environnement avec valeurs par défaut -->
         <central.host>${env.CENTRAL_HOST}</central.host>
         <central.http.port>${env.CENTRAL_HTTP_PORT}</central.http.port>
@@ -30,48 +31,44 @@
         <finalName>nancy-frontend</finalName>
 
         <plugins>
-            <!-- Plugin WAR pour packager le frontend -->
+            <!-- 1. Copier src vers target AVANT tout traitement -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>3.3.2</version>
-                <configuration>
-                    <failOnMissingWebXml>false</failOnMissingWebXml>
-                    <warSourceDirectory>${webapp.directory}</warSourceDirectory>
-                    <webResources>
-                        <resource>
-                            <directory>${webapp.directory}</directory>
-                            <filtering>true</filtering>
-                            <includes>
-                                <include>**/*.html</include>
-                                <include>**/*.js</include>
-                            </includes>
-                        </resource>
-                        <resource>
-                            <directory>${webapp.directory}</directory>
-                            <filtering>false</filtering>
-                            <excludes>
-                                <exclude>**/*.html</exclude>
-                                <exclude>**/*.js</exclude>
-                            </excludes>
-                        </resource>
-                    </webResources>
-                </configuration>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-webapp</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${target.webapp.directory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${webapp.directory}</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
-            <!-- Plugin pour remplacer l'URL de l'API lors du build -->
+            <!-- 2. Remplacer UNIQUEMENT dans la copie target -->
             <plugin>
                 <groupId>com.google.code.maven-replacer-plugin</groupId>
                 <artifactId>replacer</artifactId>
                 <version>1.5.3</version>
                 <executions>
                     <execution>
-                        <phase>prepare-package</phase>
+                        <phase>process-sources</phase>
                         <goals>
                             <goal>replace</goal>
                         </goals>
                         <configuration>
-                            <basedir>${webapp.directory}</basedir>
+                            <basedir>${target.webapp.directory}</basedir>
                             <includes>
                                 <include>js/config/constants.js</include>
                             </includes>
@@ -86,45 +83,20 @@
                 </executions>
             </plugin>
 
-            <!-- Plugin pour copier les fichiers statiques -->
+            <!-- 3. WAR utilise UNIQUEMENT les fichiers modifiés dans target -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.0</version>
-                <executions>
-                    <execution>
-                        <id>copy-resources</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/nancy-frontend</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${webapp.directory}</directory>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <warSourceDirectory>${target.webapp.directory}</warSourceDirectory>
+                </configuration>
             </plugin>
         </plugins>
     </build>
 
     <profiles>
-        <!-- Profil pour développement local -->
-        <profile>
-            <id>dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <api.base.url>http://localhost:8080</api.base.url>
-            </properties>
-        </profile>
-
         <!-- Profil pour production avec HTTPS -->
         <profile>
             <id>prod</id>
@@ -138,14 +110,6 @@
             <id>prod-http</id>
             <properties>
                 <api.base.url>http://${central.host}:${central.http.port}</api.base.url>
-            </properties>
-        </profile>
-
-        <!-- Profil pour déploiement automatique (détecte HTTPS/HTTP selon config) -->
-        <profile>
-            <id>auto</id>
-            <properties>
-                <api.base.url>${central.https.enabled} == 'true' ? 'https://${central.host}:${central.https.port}' : 'http://${central.host}:${central.http.port}'</api.base.url>
             </properties>
         </profile>
     </profiles>
