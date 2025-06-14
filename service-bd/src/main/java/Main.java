@@ -1,9 +1,8 @@
 import interfaces.ServiceCentral;
 import interfaces.ServiceBD;
 import rmi.BaseDonnee;
-import utils.ConfigManager;
+import utils.Configurateur;
 
-import java.rmi.Remote;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -26,8 +25,8 @@ public class Main {
      */
     public static void main(String[] args) {
         try {
-            ConfigManager configManager = new ConfigManager(args.length > 0 ? args[0] : null);
-            BDConfig config = new BDConfig(configManager);
+            Configurateur configurateur = new Configurateur(args.length > 0 ? args[0] : null);
+            BDConfig config = new BDConfig(configurateur);
 
             LOGGER.info("=== Démarrage du Service BD ===");
             logConfig(config);

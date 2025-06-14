@@ -18,9 +18,9 @@ import java.util.logging.Logger;
  * - Configuration de la base de données (JDBC)
  * - Configuration du proxy réseau
  */
-public class ConfigManager {
+public class Configurateur {
 
-    private static final Logger LOGGER = Logger.getLogger(ConfigManager.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(Configurateur.class.getName());
     private static final String DEFAULT_CONFIG_FILE = "config.properties";
 
     private final Properties props;
@@ -31,7 +31,7 @@ public class ConfigManager {
      * @param configFile le chemin vers le fichier de configuration
      *                   ou null pour utiliser le fichier par défaut
      */
-    public ConfigManager(String configFile) {
+    public Configurateur(String configFile) {
         this.props = new Properties();
         loadDefaultValues();
         loadFromFile(configFile != null ? configFile : DEFAULT_CONFIG_FILE);
@@ -41,7 +41,7 @@ public class ConfigManager {
      * Constructeur par défaut.
      * Utilise le fichier de configuration par défaut (config.properties).
      */
-    public ConfigManager() {
+    public Configurateur() {
         this(DEFAULT_CONFIG_FILE);
     }
 

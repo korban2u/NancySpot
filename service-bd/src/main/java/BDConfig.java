@@ -1,4 +1,4 @@
-import utils.ConfigManager;
+import utils.Configurateur;
 
 /**
  * Configuration du service BD.
@@ -21,7 +21,7 @@ public class BDConfig {
      *
      * @param config le gestionnaire de configuration
      */
-    public BDConfig(ConfigManager config) {
+    public BDConfig(Configurateur config) {
         this.jdbcUrl = config.getString("bd.jdbc.url");
         this.jdbcUser = config.getString("bd.jdbc.user");
         this.jdbcPassword = config.getString("bd.jdbc.password");

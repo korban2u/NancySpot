@@ -1,7 +1,5 @@
 package utils;
 
-import utils.ConfigManager;
-
 public class ProxyConfig {
 
     /**
@@ -47,7 +45,7 @@ public class ProxyConfig {
      *
      * @param config le gestionnaire de configuration initialisé
      */
-    public ProxyConfig(ConfigManager config) {
+    public ProxyConfig(Configurateur config) {
         this.useIutProxy = config.getBoolean("proxy.use.iut.proxy");
         this.proxyHost = config.getString("proxy.iut.host");
         this.proxyPort = config.getString("proxy.iut.port");

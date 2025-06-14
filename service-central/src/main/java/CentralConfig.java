@@ -1,4 +1,4 @@
-import utils.ConfigManager;
+import utils.Configurateur;
 
 /**
  * Configuration spécialisée pour le service central.
@@ -63,7 +63,7 @@ public class CentralConfig {
      *
      * @param config le gestionnaire de configuration initialisé
      */
-    public CentralConfig(ConfigManager config) {
+    public CentralConfig(Configurateur config) {
         this.rmiPort = config.getInt("central.rmi.port");
         this.httpPort = config.getInt("central.http.port");
         this.httpsEnabled = config.getBoolean("central.https.enabled");

@@ -1,7 +1,7 @@
 import interfaces.ServiceCentral;
 import interfaces.ServiceProxy;
 import rmi.Proxy;
-import utils.ConfigManager;
+import utils.Configurateur;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -25,8 +25,8 @@ public class Main {
      */
     public static void main(String[] args) {
         try {
-            ConfigManager configManager = new ConfigManager(args.length > 0 ? args[0] : null);
-            ProxyConfig config = new ProxyConfig(configManager);
+            Configurateur configurateur = new Configurateur(args.length > 0 ? args[0] : null);
+            ProxyConfig config = new ProxyConfig(configurateur);
 
             LOGGER.info("=== Démarrage du Service Proxy ===");
             logConfig(config);
