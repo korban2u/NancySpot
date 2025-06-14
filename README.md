@@ -280,7 +280,7 @@ make generate-cert
 - **Types** : Travaux, accidents, manifestations, embouteillages
 
 
-## 👥 Équipe
+## 👥 Groupe
 Ryan Korban
 Baptiste Delaborde
 Baptiste Hennequin
