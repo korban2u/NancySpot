@@ -19,11 +19,11 @@
 
     <properties>
         <webapp.directory>${project.basedir}/src/main/webapp</webapp.directory>
-        <!-- Configuration par défaut -->
-        <service.central.host>localhost</service.central.host>
-        <service.central.port>8080</service.central.port>
-        <service.central.https.enabled>false</service.central.https.enabled>
-        <service.central.https.port>8443</service.central.https.port>
+        <!-- Variables d'environnement avec valeurs par défaut -->
+        <central.host>${env.CENTRAL_HOST}</central.host>
+        <central.http.port>${env.CENTRAL_HTTP_PORT}</central.http.port>
+        <central.https.port>${env.CENTRAL_HTTPS_PORT}</central.https.port>
+        <central.https.enabled>${env.CENTRAL_HTTPS_ENABLED}</central.https.enabled>
     </properties>
 
     <build>
@@ -39,100 +39,73 @@
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                     <warSourceDirectory>${webapp.directory}</warSourceDirectory>
                     <webResources>
-                        <!-- Fichiers à filtrer (remplacement des variables Maven) -->
                         <resource>
                             <directory>${webapp.directory}</directory>
                             <filtering>true</filtering>
                             <includes>
-                                <include>js/config/constants.js</include>
                                 <include>**/*.html</include>
+                                <include>**/*.js</include>
                             </includes>
                         </resource>
-                        <!-- Fichiers statiques (sans filtrage) -->
                         <resource>
                             <directory>${webapp.directory}</directory>
                             <filtering>false</filtering>
                             <excludes>
-                                <exclude>js/config/constants.js</exclude>
                                 <exclude>**/*.html</exclude>
+                                <exclude>**/*.js</exclude>
                             </excludes>
                         </resource>
                     </webResources>
                 </configuration>
             </plugin>
 
-            <!-- Plugin pour copier et filtrer les fichiers JavaScript -->
+            <!-- Plugin pour remplacer l'URL de l'API lors du build -->
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                        <configuration>
+                            <basedir>${webapp.directory}</basedir>
+                            <includes>
+                                <include>js/config/constants.js</include>
+                            </includes>
+                            <replacements>
+                                <replacement>
+                                    <token>API_BASE_URL_PLACEHOLDER</token>
+                                    <value>${api.base.url}</value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Plugin pour copier les fichiers statiques -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.0</version>
                 <executions>
                     <execution>
-                        <id>copy-and-filter-js</id>
-                        <phase>generate-resources</phase>
+                        <id>copy-resources</id>
+                        <phase>validate</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/filtered-webapp</outputDirectory>
+                            <outputDirectory>${project.build.directory}/nancy-frontend</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${webapp.directory}</directory>
                                     <filtering>true</filtering>
-                                    <includes>
-                                        <include>js/config/constants.js</include>
-                                    </includes>
                                 </resource>
                             </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy-static-files</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/filtered-webapp</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${webapp.directory}</directory>
-                                    <filtering>false</filtering>
-                                    <excludes>
-                                        <exclude>js/config/constants.js</exclude>
-                                    </excludes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Plugin de build helper pour définir des propriétés calculées -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.4.0</version>
-                <executions>
-                    <execution>
-                        <id>set-api-url</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>bsh-property</goal>
-                        </goals>
-                        <configuration>
-                            <source>
-                                // Construction de l'URL selon HTTPS activé ou non
-                                boolean httpsEnabled = Boolean.parseBoolean("${service.central.https.enabled}");
-                                String host = "${service.central.host}";
-                                String port = httpsEnabled ? "${service.central.https.port}" : "${service.central.port}";
-                                String protocol = httpsEnabled ? "https" : "http";
-
-                                api.base.url = protocol + "://" + host + ":" + port;
-                            </source>
-                            <properties>
-                                <property>api.base.url</property>
-                            </properties>
                         </configuration>
                     </execution>
                 </executions>
@@ -148,54 +121,31 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <service.central.host>localhost</service.central.host>
-                <service.central.port>8080</service.central.port>
-                <service.central.https.enabled>false</service.central.https.enabled>
-                <service.central.https.port>8443</service.central.https.port>
+                <api.base.url>http://localhost:8080</api.base.url>
             </properties>
         </profile>
 
-        <!-- Profil pour développement local avec HTTPS -->
-        <profile>
-            <id>dev-https</id>
-            <properties>
-                <service.central.host>localhost</service.central.host>
-                <service.central.port>8080</service.central.port>
-                <service.central.https.enabled>true</service.central.https.enabled>
-                <service.central.https.port>8443</service.central.https.port>
-            </properties>
-        </profile>
-
-        <!-- Profil pour production -->
+        <!-- Profil pour production avec HTTPS -->
         <profile>
             <id>prod</id>
             <properties>
-                <service.central.host>${env.CENTRAL_HOST}</service.central.host>
-                <service.central.port>${env.CENTRAL_HTTP_PORT}</service.central.port>
-                <service.central.https.enabled>${env.CENTRAL_HTTPS_ENABLED}</service.central.https.enabled>
-                <service.central.https.port>${env.CENTRAL_HTTPS_PORT}</service.central.https.port>
+                <api.base.url>https://${central.host}:${central.https.port}</api.base.url>
             </properties>
         </profile>
 
-        <!-- Profil pour les machines IUT -->
+        <!-- Profil pour production avec HTTP -->
         <profile>
-            <id>iut</id>
+            <id>prod-http</id>
             <properties>
-                <service.central.host>100.64.80.240</service.central.host>
-                <service.central.port>8080</service.central.port>
-                <service.central.https.enabled>true</service.central.https.enabled>
-                <service.central.https.port>8443</service.central.https.port>
+                <api.base.url>http://${central.host}:${central.http.port}</api.base.url>
             </properties>
         </profile>
 
-        <!-- Profil pour Docker -->
+        <!-- Profil pour déploiement automatique (détecte HTTPS/HTTP selon config) -->
         <profile>
-            <id>docker</id>
+            <id>auto</id>
             <properties>
-                <service.central.host>service-central</service.central.host>
-                <service.central.port>8080</service.central.port>
-                <service.central.https.enabled>true</service.central.https.enabled>
-                <service.central.https.port>8443</service.central.https.port>
+                <api.base.url>${central.https.enabled} == 'true' ? 'https://${central.host}:${central.https.port}' : 'http://${central.host}:${central.http.port}'</api.base.url>
             </properties>
         </profile>
     </profiles>

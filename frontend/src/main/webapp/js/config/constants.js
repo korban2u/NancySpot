@@ -1,17 +1,16 @@
 /**
  * Configuration globale de l'application Nancy Interactive
  * Contient les URLs d'API, paramètres de carte et configuration des marqueurs
- * L'URL de base est configurée dynamiquement par Maven lors du build
  * @module config/constants
  * @constant {Object} NANCY_CONFIG
- * @property {string} API_BASE_URL - URL de base pour les appels API (configurée par Maven)
+ * @property {string} API_BASE_URL - URL de base pour les appels API
  * @property {Object} ENDPOINTS - Points d'entrée de l'API
  * @property {Object} MAP - Configuration de la carte Leaflet
  * @property {Object} MARKERS - Configuration des marqueurs de carte
  */
 export const NANCY_CONFIG = {
-    /** URL de base du service central - configurée par Maven selon l'environnement */
-    API_BASE_URL: '${api.base.url}',
+    /** URL de base du service central - remplacée lors du build Maven */
+    API_BASE_URL: 'https://172.22.152.208:8443',
 
     /** Points d'entrée de l'API REST */
     ENDPOINTS: {
