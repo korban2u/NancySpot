@@ -263,8 +263,10 @@ health: ## Test de santé des APIs
 	@echo "$(BLUE)=== Services Backend ===$(NC)"; \
 	for endpoint in services/etat restaurants incidents; do \
 		printf "%-15s " "$$endpoint:"; \
-		if curl -s --connect-timeout 3 "$(API_URL)/$$endpoint" >/dev/null 2>&1; then \
+		if curl -s -k --connect-timeout 3 "$(API_URL)/$$endpoint" >/dev/null 2>&1; then \
 			echo "$(GREEN)✓$(NC)"; \
+		elif curl -s -k --connect-timeout 3 "https://localhost:$(PORT)/$$endpoint" >/dev/null 2>&1; then \
+			echo "$(GREEN)✓$(NC) (localhost)"; \
 		else \
 			echo "$(RED)✗$(NC)"; \
 		fi; \
