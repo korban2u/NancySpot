@@ -102,7 +102,6 @@ javadoc: ## Générer et ouvrir la Javadoc
 	@echo "$(BLUE)Ouverture...$(NC)"
 	@xdg-open target/reports/apidocs/index.html 2>/dev/null || echo "$(YELLOW)Ouvrez : target/reports/apidocs/index.html$(NC)"
 
-
 check-cert: ## Vérifier si le certificat existe
 	@echo "$(YELLOW)Vérification du certificat HTTPS...$(NC)"
 	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
@@ -157,7 +156,6 @@ generate-cert: ## Générer un certificat auto-signé pour HTTPS
 	@keytool -list -keystore "$(CENTRAL_KEYSTORE_PATH)" -storepass "$(CENTRAL_KEYSTORE_PASSWORD)" -v | head -15
 	@echo ""
 
-
 # ==================== COMPILATION ====================
 
 build: check-https-cert ## Compiler tous les modules
@@ -180,24 +178,36 @@ check-https-cert: ## Vérifier le certificat si HTTPS est activé
 
 build-central: check-https-cert ## Compiler le service central
 	@echo "$(GREEN)=== Compilation service-central ===$(NC)"
-	@cd common && mvn clean package -DskipTests
-	@cd service-central && mvn clean package dependency:copy-dependencies -DskipTests
+	@echo "$(YELLOW)[1/3] Installation POM parent...$(NC)"
+	@mvn install -N -DskipTests -q
+	@echo "$(YELLOW)[2/3] Compilation common...$(NC)"
+	@cd common && mvn clean install -DskipTests -q
+	@echo "$(YELLOW)[3/3] Compilation service-central...$(NC)"
+	@cd service-central && mvn clean package dependency:copy-dependencies -DskipTests -q
 	@mkdir -p $(BUILD_DIR) $(LOGS_DIR) $(PIDS_DIR) $(CONFIG_DIR)
 	@$(MAKE) -s generate-config-central
 	@echo "$(GREEN)✓ Service Central compilé$(NC)"
 
 build-bd: ## Compiler le service BD
 	@echo "$(GREEN)=== Compilation service-bd ===$(NC)"
-	@cd common && mvn clean package -DskipTests
-	@cd service-bd && mvn clean package dependency:copy-dependencies -DskipTests
+	@echo "$(YELLOW)[1/3] Installation POM parent...$(NC)"
+	@mvn install -N -DskipTests -q
+	@echo "$(YELLOW)[2/3] Compilation common...$(NC)"
+	@cd common && mvn clean install -DskipTests -q
+	@echo "$(YELLOW)[3/3] Compilation service-bd...$(NC)"
+	@cd service-bd && mvn clean package dependency:copy-dependencies -DskipTests -q
 	@mkdir -p $(BUILD_DIR) $(LOGS_DIR) $(PIDS_DIR) $(CONFIG_DIR)
 	@$(MAKE) -s generate-config-bd
 	@echo "$(GREEN)✓ Service BD compilé$(NC)"
 
 build-proxy: ## Compiler le service proxy
 	@echo "$(GREEN)=== Compilation service-proxy ===$(NC)"
-	@cd common && mvn clean package -DskipTests
-	@cd service-proxy && mvn clean package dependency:copy-dependencies -DskipTests
+	@echo "$(YELLOW)[1/3] Installation POM parent...$(NC)"
+	@mvn install -N -DskipTests -q
+	@echo "$(YELLOW)[2/3] Compilation common...$(NC)"
+	@cd common && mvn clean install -DskipTests -q
+	@echo "$(YELLOW)[3/3] Compilation service-proxy...$(NC)"
+	@cd service-proxy && mvn clean package dependency:copy-dependencies -DskipTests -q
 	@mkdir -p $(BUILD_DIR) $(LOGS_DIR) $(PIDS_DIR) $(CONFIG_DIR)
 	@$(MAKE) -s generate-config-proxy
 	@echo "$(GREEN)✓ Service Proxy compilé$(NC)"
