@@ -135,11 +135,11 @@ public class Reservation implements Serializable {
         this.telephone = telephone;
     }
 
-    public int getNbConvives() {
+    public int getnbConvives() {
         return nbConvives;
     }
 
-    public void setNbConvives(int nbConvives) {
+    public void setnbConvives(int nbConvives) {
         this.nbConvives = nbConvives;
     }
 

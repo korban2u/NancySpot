@@ -347,7 +347,7 @@ public class RestaurantDAO {
             pstmtInsert.setString(4, reservation.getNomClient());
             pstmtInsert.setString(5, reservation.getPrenomClient());
             pstmtInsert.setString(6, reservation.getTelephone());
-            pstmtInsert.setInt(7, reservation.getNbConvives());
+            pstmtInsert.setInt(7, reservation.getnbConvives());
 
             int rowsInserted = pstmtInsert.executeUpdate();
 
@@ -427,7 +427,7 @@ public class RestaurantDAO {
                     reservation.setNomClient(rs.getString("nom_client"));
                     reservation.setPrenomClient(rs.getString("prenom_client"));
                     reservation.setTelephone(rs.getString("telephone"));
-                    reservation.setNbConvives(rs.getInt("nb_convives"));
+                    reservation.setnbConvives(rs.getInt("nb_convives"));
                     reservation.setDateCreation(rs.getTimestamp("date_creation"));
                     reservation.setStatut(rs.getString("statut"));
 

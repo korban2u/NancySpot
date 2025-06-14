@@ -2,7 +2,7 @@
 .PHONY: build-central build-bd build-proxy build-frontend
 .PHONY: start-central stop-central start-bd stop-bd start-proxy stop-proxy
 .PHONY: logs logs-central logs-bd logs-proxy status health
-.PHONY: deploy-frontend
+.PHONY: deploy-frontend generate-cert check-cert
 
 MAKEFLAGS += --no-print-directory
 
@@ -24,6 +24,7 @@ BUILD_DIR = build
 LOGS_DIR = $(BUILD_DIR)/logs
 PIDS_DIR = $(BUILD_DIR)/pids
 CONFIG_DIR = $(BUILD_DIR)/config
+CERTS_DIR = docker/certs
 
 # Ports par défaut
 CENTRAL_HTTP_PORT ?= 8080
@@ -31,6 +32,11 @@ CENTRAL_HTTPS_PORT ?= 8443
 CENTRAL_RMI_PORT ?= 1098
 CENTRAL_HOST ?= localhost
 CENTRAL_HTTPS_ENABLED ?= false
+
+# Configuration HTTPS
+CENTRAL_KEYSTORE_PATH ?= nancy-keystore.jks
+CENTRAL_KEYSTORE_PASSWORD ?= password123
+SSL_KEYSTORE_PASSWORD ?= nancy2024
 
 # URL dynamique selon le protocole
 ifeq ($(CENTRAL_HTTPS_ENABLED),true)
@@ -73,6 +79,10 @@ help: ## Afficher l'aide
 	@echo "  $(GREEN)health$(NC)           Test de santé"
 	@echo "  $(GREEN)clean$(NC)            Nettoyer tout"
 	@echo ""
+	@echo "$(YELLOW)HTTPS/Certificats:$(NC)"
+	@echo "  $(GREEN)check-cert$(NC)       Vérifier si le certificat existe"
+	@echo "  $(GREEN)generate-cert$(NC)    Générer un certificat auto-signé"
+	@echo ""
 	@echo "$(YELLOW)Frontend:$(NC)"
 	@echo "  $(GREEN)deploy-frontend$(NC)  Déployer sur webetu"
 	@echo ""
@@ -81,14 +91,91 @@ help: ## Afficher l'aide
 	@echo "  $(GREEN)start-bd$(NC), $(GREEN)stop-bd$(NC), $(GREEN)logs-bd$(NC)"
 	@echo "  $(GREEN)start-proxy$(NC), $(GREEN)stop-proxy$(NC), $(GREEN)logs-proxy$(NC)"
 
-build: ## Compiler tous les modules
+# ==================== GESTION DES CERTIFICATS ====================
+
+check-cert: ## Vérifier si le certificat existe
+	@echo "$(YELLOW)Vérification du certificat HTTPS...$(NC)"
+	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
+		if [ -f "$(CENTRAL_KEYSTORE_PATH)" ]; then \
+			echo "$(GREEN)✓ Certificat trouvé: $(CENTRAL_KEYSTORE_PATH)$(NC)"; \
+			keytool -list -keystore "$(CENTRAL_KEYSTORE_PATH)" -storepass "$(CENTRAL_KEYSTORE_PASSWORD)" -v 2>/dev/null | head -10 || true; \
+		else \
+			echo "$(RED)✗ Certificat non trouvé: $(CENTRAL_KEYSTORE_PATH)$(NC)"; \
+			echo "$(YELLOW)  Exécutez 'make generate-cert' pour en créer un$(NC)"; \
+		fi; \
+	else \
+		echo "$(BLUE)ℹ HTTPS désactivé dans la configuration$(NC)"; \
+	fi
+
+generate-cert: ## Générer un certificat auto-signé pour HTTPS
+	@echo "$(GREEN)=== Génération du certificat auto-signé ===$(NC)"
+	@mkdir -p $(CERTS_DIR)
+
+	@if [ -f "$(CENTRAL_KEYSTORE_PATH)" ]; then \
+		echo "$(YELLOW)Certificat existant trouvé: $(CENTRAL_KEYSTORE_PATH)$(NC)"; \
+		read -p "Voulez-vous le remplacer ? (y/N): " confirm; \
+		if [ "$$confirm" != "y" ] && [ "$$confirm" != "Y" ]; then \
+			echo "$(BLUE)Génération annulée$(NC)"; \
+			exit 0; \
+		fi; \
+		echo "$(YELLOW)Suppression de l'ancien certificat...$(NC)"; \
+		rm -f "$(CENTRAL_KEYSTORE_PATH)"; \
+	fi
+
+	@echo "$(YELLOW)Création du certificat pour: $(CENTRAL_HOST)$(NC)"
+	@echo "$(BLUE)Configuration:$(NC)"
+	@echo "  Host: $(CENTRAL_HOST)"
+	@echo "  Port HTTPS: $(CENTRAL_HTTPS_PORT)"
+	@echo "  Keystore: $(CENTRAL_KEYSTORE_PATH)"
+	@echo "  Validité: 365 jours"
+	@echo ""
+
+	@keytool -genkeypair \
+		-alias nancy-server \
+		-keyalg RSA \
+		-keysize 2048 \
+		-validity 365 \
+		-keystore "$(CENTRAL_KEYSTORE_PATH)" \
+		-storepass "$(CENTRAL_KEYSTORE_PASSWORD)" \
+		-keypass "$(SSL_KEYSTORE_PASSWORD)" \
+		-dname "CN=$(CENTRAL_HOST),OU=Nancy Spot,O=IUT Nancy Charlemagne,L=Nancy,ST=Grand Est,C=FR" \
+		-ext "SAN=DNS:$(CENTRAL_HOST),DNS:localhost,IP:127.0.0.1,IP:$(shell hostname -I | awk '{print $$1}' 2>/dev/null || echo '127.0.0.1')"
+
+	@echo ""
+	@echo "$(GREEN)✓ Certificat généré avec succès!$(NC)"
+	@echo "$(BLUE)Informations du certificat:$(NC)"
+	@keytool -list -keystore "$(CENTRAL_KEYSTORE_PATH)" -storepass "$(CENTRAL_KEYSTORE_PASSWORD)" -v | head -15
+	@echo ""
+	@echo "$(YELLOW)Instructions:$(NC)"
+	@echo "1. Le certificat est auto-signé, votre navigateur affichera un avertissement"
+	@echo "2. Cliquez sur 'Avancé' puis 'Accepter le risque et continuer'"
+	@echo "3. Ou ajoutez une exception de sécurité pour https://$(CENTRAL_HOST):$(CENTRAL_HTTPS_PORT)"
+	@echo ""
+	@if [ "$(CENTRAL_HOST)" != "localhost" ] && [ "$(CENTRAL_HOST)" != "127.0.0.1" ]; then \
+		echo "$(BLUE)Note: Pour un déploiement en production, configurez $(CENTRAL_HOST) dans /etc/hosts si nécessaire$(NC)"; \
+	fi
+
+# ==================== COMPILATION ====================
+
+build: check-https-cert ## Compiler tous les modules
 	@echo "$(GREEN)=== Compilation complète ===$(NC)"
 	@mvn clean package dependency:copy-dependencies -DskipTests
 	@mkdir -p $(BUILD_DIR) $(LOGS_DIR) $(PIDS_DIR) $(CONFIG_DIR)
 	@$(MAKE) -s generate-configs
 	@echo "$(GREEN)✓ Compilation terminée$(NC)"
 
-build-central: ## Compiler le service central
+check-https-cert: ## Vérifier le certificat si HTTPS est activé
+	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
+		if [ ! -f "$(CENTRAL_KEYSTORE_PATH)" ]; then \
+			echo "$(RED)⚠ HTTPS activé mais certificat manquant$(NC)"; \
+			echo "$(YELLOW)Génération automatique du certificat...$(NC)"; \
+			$(MAKE) generate-cert; \
+		else \
+			echo "$(GREEN)✓ Certificat HTTPS trouvé$(NC)"; \
+		fi; \
+	fi
+
+build-central: check-https-cert ## Compiler le service central
 	@echo "$(GREEN)=== Compilation service-central ===$(NC)"
 	@cd common && mvn clean package -DskipTests
 	@cd service-central && mvn clean package dependency:copy-dependencies -DskipTests
@@ -151,6 +238,9 @@ generate-config-proxy:
 deploy: build start ## Déploiement complet des services backend
 	@echo "$(GREEN)✓ Services backend déployés$(NC)"
 	@echo "$(BLUE)API: $(API_URL)$(NC)"
+	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
+		echo "$(YELLOW)⚠ HTTPS avec certificat auto-signé - Accepter l'exception dans le navigateur$(NC)"; \
+	fi
 	@echo "$(YELLOW)Pour le frontend: make deploy-frontend$(NC)"
 
 start: start-central start-bd start-proxy ## Démarrer tous les services
@@ -165,6 +255,9 @@ start-central: ## Démarrer service central
 		echo "$(YELLOW)Service Central déjà démarré$(NC)"; exit 0; \
 	fi
 	@echo "$(YELLOW)Démarrage Service Central...$(NC)"
+	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
+		echo "$(BLUE)Mode HTTPS activé sur port $(CENTRAL_HTTPS_PORT)$(NC)"; \
+	fi
 	@nohup java -Xmx1g -Djava.rmi.server.hostname=$(CENTRAL_HOST) \
 		-cp "$(CENTRAL_JAR):service-central/target/dependency/*:$(COMMON_JAR)" \
 		Main $(CONFIG_DIR)/central.properties > $(LOGS_DIR)/central.log 2>&1 & \
@@ -257,6 +350,9 @@ status: ## Statut des services
 	@echo ""
 	@echo "$(BLUE)API: $(API_URL)$(NC)"
 	@echo "$(BLUE)Protocole: $(PROTOCOL) sur port $(PORT)$(NC)"
+	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
+		echo "$(YELLOW)HTTPS: Certificat auto-signé - Accepter l'exception dans le navigateur$(NC)"; \
+	fi
 
 health: ## Test de santé des APIs
 	@echo "$(YELLOW)Test de santé...$(NC)"

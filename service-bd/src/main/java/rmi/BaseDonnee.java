@@ -242,7 +242,7 @@ public class BaseDonnee implements ServiceBD {
             reservation.setNomClient(jsonObj.getString("nomClient"));
             reservation.setPrenomClient(jsonObj.getString("prenomClient"));
             reservation.setTelephone(jsonObj.getString("telephone"));
-            reservation.setNbConvives(jsonObj.getInt("nbConvives"));
+            reservation.setnbConvives(jsonObj.getInt("nbConvives"));
 
             // Parsing de la date
             String dateStr = jsonObj.getString("dateReservation");
@@ -435,7 +435,7 @@ public class BaseDonnee implements ServiceBD {
         jsonReservation.put("nomClient", reservation.getNomClient());
         jsonReservation.put("prenomClient", reservation.getPrenomClient());
         jsonReservation.put("telephone", reservation.getTelephone());
-        jsonReservation.put("nbConvives", reservation.getNbConvives());
+        jsonReservation.put("nbConvives", reservation.getnbConvives());
         jsonReservation.put("statut", reservation.getStatut());
         jsonReservation.put("nomComplet", reservation.getNomComplet());
 

@@ -60,10 +60,10 @@ CREATE TABLE reservation (
                              nom_client VARCHAR2(100) NOT NULL,
                              prenom_client VARCHAR2(100) NOT NULL,
                              telephone VARCHAR2(20) NOT NULL,
-                             nb_personnes NUMBER NOT NULL,
+                             nb_convives NUMBER NOT NULL,
                              date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                              statut VARCHAR2(20) DEFAULT 'confirmee' CHECK (statut IN ('confirmee', 'annulee')),
-                             CONSTRAINT chk_reservation_personnes CHECK (nb_personnes BETWEEN 1 AND 20),
+                             CONSTRAINT chk_reservation_personnes CHECK (nb_convives BETWEEN 1 AND 20),
                              CONSTRAINT chk_reservation_date CHECK (date_reservation >= DATE '2025-01-01')
 );
 
@@ -166,19 +166,19 @@ BEGIN
 END;
 /
 
-INSERT INTO reservation (id, table_id, creneau_id, date_reservation, nom_client, prenom_client, telephone, nb_personnes)
+INSERT INTO reservation (id, table_id, creneau_id, date_reservation, nom_client, prenom_client, telephone, nb_convives)
 VALUES (seq_reservation.NEXTVAL, 3, 1, TRUNC(SYSDATE), 'Korban', 'Ryan', '0612345678', 4);
 
-INSERT INTO reservation (id, table_id, creneau_id, date_reservation, nom_client, prenom_client, telephone, nb_personnes)
+INSERT INTO reservation (id, table_id, creneau_id, date_reservation, nom_client, prenom_client, telephone, nb_convives)
 VALUES (seq_reservation.NEXTVAL, 23, 2, TRUNC(SYSDATE), 'Eva', 'Maxence', '0687654321', 2);
 
-INSERT INTO reservation (id, table_id, creneau_id, date_reservation, nom_client, prenom_client, telephone, nb_personnes)
+INSERT INTO reservation (id, table_id, creneau_id, date_reservation, nom_client, prenom_client, telephone, nb_convives)
 VALUES (seq_reservation.NEXTVAL, 35, 1, TRUNC(SYSDATE) + 1, 'Delaroute', 'Biketiste', '0611223344', 8);
 
-INSERT INTO reservation (id, table_id, creneau_id, date_reservation, nom_client, prenom_client, telephone, nb_personnes)
+INSERT INTO reservation (id, table_id, creneau_id, date_reservation, nom_client, prenom_client, telephone, nb_convives)
 VALUES (seq_reservation.NEXTVAL, 17, 2, TRUNC(SYSDATE) + 1, 'Hennequin', 'Baptiste', '0655443322', 4);
 
-INSERT INTO reservation (id, table_id, creneau_id, date_reservation, nom_client, prenom_client, telephone, nb_personnes)
+INSERT INTO reservation (id, table_id, creneau_id, date_reservation, nom_client, prenom_client, telephone, nb_convives)
 VALUES (seq_reservation.NEXTVAL, 44, 1, TRUNC(SYSDATE) + 2, 'Valentin', 'Knorst', '0699887766', 6);
 
 COMMIT;
