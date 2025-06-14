@@ -1,7 +1,6 @@
 package rmi;
 
 import interfaces.ServiceProxy;
-import interfaces.ServiceCentral;
 
 import clients.IncidentsClient;
 import org.json.JSONObject;
@@ -72,7 +71,7 @@ public class Proxy implements ServiceProxy {
         LOGGER.info("Appel getIncidents()");
 
         try {
-            return incidentsClient.getIncidentsReels();
+            return incidentsClient.getIncidents();
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur getIncidents", e);

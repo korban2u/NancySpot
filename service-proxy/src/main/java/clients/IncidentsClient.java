@@ -38,7 +38,7 @@ public class IncidentsClient extends BaseHttpClient {
 
     @Override
     public String getData() {
-        return getIncidentsReels();
+        return getIncidents();
     }
 
     @Override
@@ -78,7 +78,7 @@ public class IncidentsClient extends BaseHttpClient {
      *
      * @return JSON contenant la liste des incidents formatés
      */
-    public String getIncidentsReels() {
+    public String getIncidents() {
         try {
             LOGGER.info("Récupération des données " + getServiceName() + "...");
 
