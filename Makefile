@@ -146,14 +146,7 @@ generate-cert: ## Générer un certificat auto-signé pour HTTPS
 	@echo "$(BLUE)Informations du certificat:$(NC)"
 	@keytool -list -keystore "$(CENTRAL_KEYSTORE_PATH)" -storepass "$(CENTRAL_KEYSTORE_PASSWORD)" -v | head -15
 	@echo ""
-	@echo "$(YELLOW)Instructions:$(NC)"
-	@echo "1. Le certificat est auto-signé, votre navigateur affichera un avertissement"
-	@echo "2. Cliquez sur 'Avancé' puis 'Accepter le risque et continuer'"
-	@echo "3. Ou ajoutez une exception de sécurité pour https://$(CENTRAL_HOST):$(CENTRAL_HTTPS_PORT)"
-	@echo ""
-	@if [ "$(CENTRAL_HOST)" != "localhost" ] && [ "$(CENTRAL_HOST)" != "127.0.0.1" ]; then \
-		echo "$(BLUE)Note: Pour un déploiement en production, configurez $(CENTRAL_HOST) dans /etc/hosts si nécessaire$(NC)"; \
-	fi
+
 
 # ==================== COMPILATION ====================
 
