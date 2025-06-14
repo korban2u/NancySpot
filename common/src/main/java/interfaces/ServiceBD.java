@@ -4,158 +4,160 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Interface RMI pour le service de base de données
- * Version améliorée avec support des créneaux horaires
+ * Interface RMI pour le service de base de données du système Nancy Spot.
+ * Ce service gère toutes les opérations de persistance des données,
+ * incluant les restaurants, tables, créneaux horaires et réservations.
  *
  * @author Nancy Spot Team
- * @version 2.0 - Avec gestion des créneaux
+ * @version 2.0
+ * @since 1.0
  */
 public interface ServiceBD extends Remote {
 
-    // ==================== MÉTHODES RESTAURANTS (inchangées) ====================
-
     /**
-     * Récupère la liste complète des restaurants
+     * Récupère la liste complète des restaurants.
+     * Retourne tous les restaurants avec leurs informations de base
+     * incluant nom, adresse, téléphone et coordonnées géographiques.
      *
-     * @return JSON contenant la liste des restaurants
-     * @throws RemoteException En cas d'erreur RMI
+     * @return un JSON contenant la liste des restaurants
+     * @throws RemoteException en cas d'erreur de communication RMI
      */
     String getAllRestaurants() throws RemoteException;
 
-    // ==================== MÉTHODES CRÉNEAUX (nouvelles) ====================
-
     /**
-     * Récupère la liste des créneaux horaires disponibles
-     * Retourne uniquement les créneaux actifs, triés par ordre d'affichage
+     * Récupère la liste des créneaux horaires disponibles.
+     * Retourne uniquement les créneaux actifs, triés par ordre d'affichage.
+     * Chaque créneau contient son libellé et sa plage horaire.
      *
-     * @return JSON contenant la liste des créneaux actifs
-     * @throws RemoteException En cas d'erreur RMI
+     * @return un JSON contenant la liste des créneaux actifs
+     * @throws RemoteException en cas d'erreur de communication RMI
      */
     String getCreneauxDisponibles() throws RemoteException;
 
     /**
-     * Récupère un créneau spécifique par son ID
+     * Récupère un créneau spécifique par son identifiant.
      *
-     * @param creneauId Identifiant du créneau
-     * @return JSON contenant les données du créneau ou erreur si non trouvé
-     * @throws RemoteException En cas d'erreur RMI
+     * @param creneauId l'identifiant du créneau recherché
+     * @return un JSON contenant les données du créneau ou une erreur si non trouvé
+     * @throws RemoteException en cas d'erreur de communication RMI
      */
     String getCreneauById(int creneauId) throws RemoteException;
 
-    // ==================== MÉTHODES TABLES (améliorées avec créneaux) ====================
-
     /**
-     * Récupère les tables libres pour un restaurant donné
-     * Version sans créneau (compatibilité descendante)
+     * Récupère les tables libres pour un restaurant donné.
+     * Version sans créneau maintenue pour compatibilité descendante.
      *
-     * @param restaurantId Identifiant du restaurant
-     * @return JSON contenant la liste des tables
-     * @throws RemoteException En cas d'erreur RMI
+     * @param restaurantId l'identifiant du restaurant
+     * @return un JSON contenant la liste des tables
+     * @throws RemoteException en cas d'erreur de communication RMI
      * @deprecated Utiliser getTablesLibresPourCreneau() à la place
      */
     @Deprecated
     String getTablesLibres(int restaurantId) throws RemoteException;
 
     /**
-     * Récupère les tables libres pour un restaurant, une date et un créneau donnés
-     * Cette méthode remplace getTablesLibres() pour la gestion des créneaux
+     * Récupère les tables libres pour un restaurant, une date et un créneau donnés.
+     * Cette méthode remplace getTablesLibres() pour la gestion des créneaux.
+     * Vérifie la disponibilité en temps réel pour le créneau spécifié.
      *
-     * @param restaurantId Identifiant du restaurant
-     * @param dateReservation Date de réservation au format "yyyy-MM-dd"
-     * @param creneauId Identifiant du créneau
-     * @return JSON contenant la liste des tables disponibles pour ce créneau
-     * @throws RemoteException En cas d'erreur RMI
+     * @param restaurantId l'identifiant du restaurant
+     * @param dateReservation la date de réservation au format "yyyy-MM-dd"
+     * @param creneauId l'identifiant du créneau
+     * @return un JSON contenant la liste des tables disponibles pour ce créneau
+     * @throws RemoteException en cas d'erreur de communication RMI
      */
     String getTablesLibresPourCreneau(int restaurantId, String dateReservation, int creneauId) throws RemoteException;
 
     /**
-     * Récupère toutes les tables d'un restaurant avec leur statut pour une date et un créneau
-     * Permet d'afficher toutes les tables avec indication de disponibilité
+     * Récupère toutes les tables d'un restaurant avec leur statut pour une date et un créneau.
+     * Permet d'afficher toutes les tables avec indication de disponibilité,
+     * utile pour les interfaces d'administration.
      *
-     * @param restaurantId Identifiant du restaurant
-     * @param dateReservation Date de réservation au format "yyyy-MM-dd"
-     * @param creneauId Identifiant du créneau
-     * @return JSON contenant toutes les tables avec leur statut (libre/occupee)
-     * @throws RemoteException En cas d'erreur RMI
+     * @param restaurantId l'identifiant du restaurant
+     * @param dateReservation la date de réservation au format "yyyy-MM-dd"
+     * @param creneauId l'identifiant du créneau
+     * @return un JSON contenant toutes les tables avec leur statut (libre/occupee)
+     * @throws RemoteException en cas d'erreur de communication RMI
      */
     String getTablesAvecStatut(int restaurantId, String dateReservation, int creneauId) throws RemoteException;
 
-    // ==================== MÉTHODES RÉSERVATIONS (améliorées) ====================
-
     /**
-     * Effectue une réservation de table pour un créneau spécifique
-     * Version améliorée avec gestion des créneaux
+     * Effectue une réservation de table pour un créneau spécifique.
+     * Vérifie la disponibilité avant de créer la réservation.
      *
-     * @param jsonReservation JSON contenant les données de réservation
-     *                       Doit inclure: tableId, creneauId, dateReservation,
+     * @param jsonReservation un JSON contenant les données de réservation :
+     *                       tableId, creneauId, dateReservation,
      *                       nomClient, prenomClient, telephone, nbConvives
-     * @return JSON contenant le résultat de la réservation
-     * @throws RemoteException En cas d'erreur RMI
+     * @return un JSON contenant le résultat de la réservation (succès ou erreur)
+     * @throws RemoteException en cas d'erreur de communication RMI
      */
     String reserverTable(String jsonReservation) throws RemoteException;
 
     /**
-     * Vérifie la disponibilité d'une table pour un créneau et une date donnés
+     * Vérifie la disponibilité d'une table pour un créneau et une date donnés.
+     * Permet de valider une réservation avant de la confirmer.
      *
-     * @param tableId Identifiant de la table
-     * @param dateReservation Date de réservation au format "yyyy-MM-dd"
-     * @param creneauId Identifiant du créneau
-     * @return JSON contenant le statut de disponibilité
-     * @throws RemoteException En cas d'erreur RMI
+     * @param tableId l'identifiant de la table
+     * @param dateReservation la date de réservation au format "yyyy-MM-dd"
+     * @param creneauId l'identifiant du créneau
+     * @return un JSON contenant le statut de disponibilité
+     * @throws RemoteException en cas d'erreur de communication RMI
      */
     String verifierDisponibilite(int tableId, String dateReservation, int creneauId) throws RemoteException;
 
     /**
-     * Récupère les réservations d'un restaurant pour une date donnée
-     * Utile pour l'administration et la visualisation des plannings
+     * Récupère les réservations d'un restaurant pour une date donnée.
+     * Utile pour l'administration et la visualisation des plannings.
+     * Inclut toutes les réservations confirmées et leurs détails.
      *
-     * @param restaurantId Identifiant du restaurant
-     * @param dateReservation Date au format "yyyy-MM-dd"
-     * @return JSON contenant la liste des réservations
-     * @throws RemoteException En cas d'erreur RMI
+     * @param restaurantId l'identifiant du restaurant
+     * @param dateReservation la date au format "yyyy-MM-dd"
+     * @return un JSON contenant la liste des réservations avec détails complets
+     * @throws RemoteException en cas d'erreur de communication RMI
      */
     String getReservationsPourDate(int restaurantId, String dateReservation) throws RemoteException;
 
     /**
-     * Annule une réservation existante
+     * Annule une réservation existante.
+     * Change le statut de la réservation à "annulee" et libère la table.
      *
-     * @param reservationId Identifiant de la réservation à annuler
-     * @return JSON contenant le résultat de l'annulation
-     * @throws RemoteException En cas d'erreur RMI
+     * @param reservationId l'identifiant de la réservation à annuler
+     * @return un JSON contenant le résultat de l'annulation
+     * @throws RemoteException en cas d'erreur de communication RMI
      */
     String annulerReservation(int reservationId) throws RemoteException;
 
-    // ==================== MÉTHODES STATISTIQUES (nouvelles) ====================
-
     /**
-     * Récupère les statistiques de réservation pour un restaurant
+     * Récupère les statistiques de réservation pour un restaurant.
+     * Fournit des métriques sur les réservations par créneau, taux d'occupation,
+     * et autres indicateurs de performance sur une période donnée.
      *
-     * @param restaurantId Identifiant du restaurant
-     * @param dateDebut Date de début de la période au format "yyyy-MM-dd"
-     * @param dateFin Date de fin de la période au format "yyyy-MM-dd"
-     * @return JSON contenant les statistiques (nb réservations par créneau, taux occupation, etc.)
-     * @throws RemoteException En cas d'erreur RMI
+     * @param restaurantId l'identifiant du restaurant
+     * @param dateDebut la date de début de la période au format "yyyy-MM-dd"
+     * @param dateFin la date de fin de la période au format "yyyy-MM-dd"
+     * @return un JSON contenant les statistiques détaillées
+     * @throws RemoteException en cas d'erreur de communication RMI
      */
     String getStatistiquesReservations(int restaurantId, String dateDebut, String dateFin) throws RemoteException;
 
     /**
-     * Récupère le planning complet d'un restaurant pour une période donnée
+     * Récupère le planning complet d'un restaurant pour une période donnée.
+     * Retourne un planning détaillé par date et créneau avec toutes les réservations.
      *
-     * @param restaurantId Identifiant du restaurant
-     * @param dateDebut Date de début au format "yyyy-MM-dd"
-     * @param dateFin Date de fin au format "yyyy-MM-dd"
-     * @return JSON contenant le planning détaillé par date et créneau
-     * @throws RemoteException En cas d'erreur RMI
+     * @param restaurantId l'identifiant du restaurant
+     * @param dateDebut la date de début au format "yyyy-MM-dd"
+     * @param dateFin la date de fin au format "yyyy-MM-dd"
+     * @return un JSON contenant le planning détaillé
+     * @throws RemoteException en cas d'erreur de communication RMI
      */
     String getPlanningRestaurant(int restaurantId, String dateDebut, String dateFin) throws RemoteException;
 
-    // ==================== MÉTHODES SYSTÈME (inchangées) ====================
-
     /**
-     * Test de connectivité du service
+     * Test de connectivité du service de base de données.
+     * Permet de vérifier que le service est opérationnel et accessible.
      *
-     * @return true si le service est opérationnel
-     * @throws RemoteException En cas d'erreur RMI
+     * @return true si le service répond correctement
+     * @throws RemoteException en cas d'erreur de communication RMI
      */
     boolean ping() throws RemoteException;
 }

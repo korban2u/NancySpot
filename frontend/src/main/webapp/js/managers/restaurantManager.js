@@ -3,7 +3,6 @@ import { UIUtils } from '../utils/ui.js';
 
 /**
  * Gestionnaire des restaurants et réservations avec support des créneaux horaires
- * Version améliorée avec workflow de réservation en 3 étapes
  * @module managers/restaurantManager
  */
 export class RestaurantManager {

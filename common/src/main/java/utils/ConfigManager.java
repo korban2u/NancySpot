@@ -5,7 +5,23 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-
+/**
+ * Gestionnaire de configuration pour l'application Nancy Spot.
+ *
+ * Cette classe centralise la gestion des paramètres de configuration
+ * de tous les services de l'application. Elle charge les configurations
+ * depuis des fichiers properties et fournit des valeurs par défaut
+ * pour assurer le bon fonctionnement même sans fichier de configuration.
+ *
+ * Paramètres gérés :
+ * - Configuration du service central (ports RMI, HTTP, HTTPS)
+ * - Configuration de la base de données (JDBC)
+ * - Configuration du proxy réseau
+ *
+ * @author Nancy Spot Team
+ * @version 1.0
+ * @since 1.0
+ */
 public class ConfigManager {
 
     private static final Logger LOGGER = Logger.getLogger(ConfigManager.class.getName());
@@ -13,17 +29,31 @@ public class ConfigManager {
 
     private final Properties props;
 
+    /**
+     * Constructeur avec fichier de configuration spécifique.
+     *
+     * @param configFile le chemin vers le fichier de configuration
+     *                   ou null pour utiliser le fichier par défaut
+     */
     public ConfigManager(String configFile) {
         this.props = new Properties();
         loadDefaultValues();
         loadFromFile(configFile != null ? configFile : DEFAULT_CONFIG_FILE);
     }
 
+    /**
+     * Constructeur par défaut.
+     * Utilise le fichier de configuration par défaut (config.properties).
+     */
     public ConfigManager() {
         this(DEFAULT_CONFIG_FILE);
     }
 
-
+    /**
+     * Charge les valeurs par défaut pour tous les paramètres.
+     * Ces valeurs assurent le fonctionnement de l'application
+     * même sans fichier de configuration externe.
+     */
     private void loadDefaultValues() {
         // Service Central
         props.setProperty("central.rmi.port", "1098");
@@ -46,7 +76,12 @@ public class ConfigManager {
         props.setProperty("proxy.iut.port", "3128");
     }
 
-
+    /**
+     * Charge la configuration depuis un fichier properties.
+     * En cas d'échec de lecture, les valeurs par défaut sont conservées.
+     *
+     * @param configFile le chemin vers le fichier de configuration
+     */
     private void loadFromFile(String configFile) {
         try (FileInputStream fis = new FileInputStream(configFile)) {
             props.load(fis);
@@ -56,23 +91,34 @@ public class ConfigManager {
         }
     }
 
-
+    /**
+     * Récupère une valeur de configuration sous forme de chaîne.
+     *
+     * @param key la clé de configuration
+     * @return la valeur associée à la clé ou null si non trouvée
+     */
     public String getString(String key) {
         return props.getProperty(key);
     }
 
+    /**
+     * Récupère une valeur de configuration sous forme d'entier.
+     *
+     * @param key la clé de configuration
+     * @return la valeur entière associée à la clé
+     * @throws NumberFormatException si la valeur n'est pas un entier valide
+     */
     public int getInt(String key) {
         return Integer.parseInt(props.getProperty(key));
     }
 
+    /**
+     * Récupère une valeur de configuration sous forme de booléen.
+     *
+     * @param key la clé de configuration
+     * @return la valeur booléenne associée à la clé
+     */
     public boolean getBoolean(String key) {
         return Boolean.parseBoolean(props.getProperty(key));
     }
-
-
-
-
-
-
-
 }

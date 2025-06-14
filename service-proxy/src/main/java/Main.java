@@ -21,7 +21,6 @@ public class Main {
             LOGGER.info("=== Démarrage du Service Proxy ===");
             logConfig(config);
 
-            // ✅ CORRECTION : Passer la configuration complète du proxy
             Proxy proxy = new Proxy(config.useIutProxy, config.proxyHost, config.proxyPort);
 
             ServiceProxy serviceProxyStub = (ServiceProxy) UnicastRemoteObject.exportObject(proxy, 0);

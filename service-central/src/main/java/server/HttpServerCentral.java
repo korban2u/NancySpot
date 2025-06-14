@@ -20,11 +20,22 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 /**
- * Serveur HTTP Central amélioré avec support des créneaux
- * Version 2.0 avec nouveaux endpoints pour la gestion des créneaux horaires
+ * Serveur HTTP Central avec support HTTPS et gestion des créneaux horaires.
+ *
+ * Ce serveur expose les APIs qui font le pont entre les clients web
+ * et les services RMI backend. Il supporte à la fois HTTP et HTTPS
+ *
+ * Endpoints disponibles :
+ * - GET /restaurants - Liste des restaurants
+ * - GET /creneaux - Liste des créneaux horaires
+ * - GET /tables/libres/{restaurantId}/{date}/{creneauId} - Tables libres
+ * - POST /reserver - Effectuer une réservation
+ * - GET /incidents - Incidents de circulation
+ * - GET /services/etat - État des services backend
  *
  * @author Nancy Spot Team
- * @version 2.0 - Avec gestion des créneaux
+ * @version 2.0
+ * @since 1.0
  */
 public class HttpServerCentral {
 
@@ -37,10 +48,25 @@ public class HttpServerCentral {
     private HttpServer server;
     private final Serveur serviceCentral;
 
+    /**
+     * Constructeur pour serveur HTTP simple.
+     *
+     * @param port le port d'écoute du serveur
+     * @param serviceCentral l'instance du service central RMI
+     */
     public HttpServerCentral(int port, Serveur serviceCentral) {
         this(port, serviceCentral, false, null, null);
     }
 
+    /**
+     * Constructeur complet avec support HTTPS.
+     *
+     * @param port le port d'écoute du serveur
+     * @param serviceCentral l'instance du service central RMI
+     * @param httpsEnabled true pour activer HTTPS, false pour HTTP simple
+     * @param keystorePath le chemin vers le keystore SSL (requis si HTTPS activé)
+     * @param keystorePassword le mot de passe du keystore SSL (requis si HTTPS activé)
+     */
     public HttpServerCentral(int port, Serveur serviceCentral, boolean httpsEnabled,
                              String keystorePath, String keystorePassword) {
         this.port = port;
@@ -50,6 +76,11 @@ public class HttpServerCentral {
         this.keystorePassword = keystorePassword;
     }
 
+    /**
+     * Démarre le serveur HTTP ou HTTPS selon la configuration.
+     *
+     * @throws Exception en cas d'erreur lors du démarrage du serveur
+     */
     public void start() throws Exception {
         if (httpsEnabled) {
             startHttpsServer();
@@ -58,23 +89,33 @@ public class HttpServerCentral {
         }
     }
 
+    /**
+     * Démarre le serveur HTTPS avec certificat SSL.
+     * Configure le contexte SSL et le keystore pour les connexions sécurisées.
+     *
+     * @throws Exception en cas d'erreur lors de la configuration SSL ou du démarrage
+     */
     private void startHttpsServer() throws Exception {
         LOGGER.info("Démarrage du serveur HTTPS sur le port " + port);
 
+        // Chargement du keystore SSL
         KeyStore keyStore = KeyStore.getInstance("JKS");
         try (FileInputStream fis = new FileInputStream(keystorePath)) {
             keyStore.load(fis, keystorePassword.toCharArray());
         }
 
+        // Configuration des gestionnaires de clés et de confiance
         KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
         kmf.init(keyStore, keystorePassword.toCharArray());
 
         TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
         tmf.init(keyStore);
 
+        // Création du contexte SSL
         SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
 
+        // Création et configuration du serveur HTTPS
         HttpsServer httpsServer = HttpsServer.create(new InetSocketAddress(port), 0);
         httpsServer.setHttpsConfigurator(new HttpsConfigurator(sslContext) {
             @Override
@@ -89,6 +130,11 @@ public class HttpServerCentral {
         LOGGER.info("Serveur HTTPS démarré sur https://localhost:" + port);
     }
 
+    /**
+     * Démarre le serveur HTTP simple (non sécurisé).
+     *
+     * @throws IOException en cas d'erreur lors du démarrage du serveur
+     */
     private void startHttpServer() throws IOException {
         LOGGER.info("Démarrage du serveur HTTP sur le port " + port);
 
@@ -98,6 +144,10 @@ public class HttpServerCentral {
         LOGGER.info("Serveur HTTP démarré sur http://localhost:" + port);
     }
 
+    /**
+     * Configure le serveur avec les contextes et les handlers.
+     * Initialise le pool de threads et démarre effectivement le serveur.
+     */
     private void configureServer() {
         server.setExecutor(Executors.newFixedThreadPool(10));
         createContexts();
@@ -106,30 +156,26 @@ public class HttpServerCentral {
     }
 
     /**
-     * Configuration de tous les contextes HTTP avec support des créneaux
+     * Crée tous les contextes HTTP avec leurs handlers et filtres CORS.
+     * Configure l'ensemble des endpoints de l'API REST avec gestion des créneaux.
      */
     private void createContexts() {
         CorsFilter corsFilter = new CorsFilter();
 
-        // ==================== ENDPOINTS RESTAURANTS ====================
-
+        // Endpoints restaurants
         HttpContext restaurantsContext = server.createContext("/restaurants",
                 new RestaurantsHandler(serviceCentral));
         restaurantsContext.getFilters().add(corsFilter);
 
-        // ==================== ENDPOINTS CRÉNEAUX ====================
-
+        // Endpoints créneaux horaires
         HttpContext creneauxContext = server.createContext("/creneaux",
                 new CreneauxHandler(serviceCentral));
         creneauxContext.getFilters().add(corsFilter);
 
-        // ==================== ENDPOINTS TABLES ====================
-
+        // Endpoints tables avec gestion des créneaux
         HttpContext tablesCreneauxContext = server.createContext("/tables/",
                 new TablesCreneauxHandler(serviceCentral));
         tablesCreneauxContext.getFilters().add(corsFilter);
-
-        // ==================== ENDPOINTS RÉSERVATIONS ====================
 
         // Endpoint principal de réservation
         HttpContext reserverContext = server.createContext("/reserver",
@@ -141,30 +187,23 @@ public class HttpServerCentral {
                 new ReservationsHandler(serviceCentral));
         reservationsContext.getFilters().add(corsFilter);
 
-        // ==================== ENDPOINTS EXTERNES ====================
-
-        // Incidents de circulation
+        // Endpoints externes (incidents de circulation)
         HttpContext incidentsContext = server.createContext("/incidents",
                 new IncidentsHandler(serviceCentral));
         incidentsContext.getFilters().add(corsFilter);
 
-        // ==================== ENDPOINTS SYSTÈME ====================
-
-        // État des services
+        // Endpoints système
         HttpContext etatContext = server.createContext("/services/etat",
                 new EtatServicesHandler(serviceCentral));
         etatContext.getFilters().add(corsFilter);
 
-        // Endpoint de santé général
-        HttpContext healthContext = server.createContext("/health",
-                new HealthHandler(serviceCentral));
-        healthContext.getFilters().add(corsFilter);
 
         LOGGER.info("Contextes HTTP créés avec filtres CORS");
     }
 
     /**
-     * Affiche toutes les routes disponibles dans les logs
+     * Affiche toutes les routes disponibles dans les logs.
+     * Utile pour le debugging et la documentation des APIs.
      */
     private void logAvailableRoutes() {
         LOGGER.info("=== ROUTES DISPONIBLES ===");
@@ -191,11 +230,14 @@ public class HttpServerCentral {
 
         LOGGER.info("SYSTÈME:");
         LOGGER.info("  GET  /services/etat                   - État des services RMI");
-        LOGGER.info("  GET  /health                          - Santé générale du système");
 
         LOGGER.info("=== SERVEUR OPÉRATIONNEL ===");
     }
 
+    /**
+     * Arrête proprement le serveur HTTP.
+     * Termine le traitement des requêtes en cours et libère les ressources.
+     */
     public void stop() {
         if (server != null) {
             LOGGER.info("Arrêt du serveur...");

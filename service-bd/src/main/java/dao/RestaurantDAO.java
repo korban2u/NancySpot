@@ -15,8 +15,6 @@ import java.text.ParseException;
 
 /**
  * DAO pour la gestion des restaurants, tables et réservations avec support des créneaux
- * Version améliorée avec gestion transactionnelle et méthodes pour les créneaux horaires
- *
  * @author Nancy Spot Team
  * @version 2.0 - Avec gestion des créneaux
  */

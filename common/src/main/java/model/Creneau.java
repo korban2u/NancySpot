@@ -3,24 +3,27 @@ package model;
 import java.io.Serializable;
 
 /**
- * Modèle représentant un créneau horaire pour les réservations
- * Un créneau définit une plage horaire pendant laquelle les réservations sont possibles
+ * Représente un créneau horaire pour les réservations de restaurant.
+ * Un créneau définit une plage horaire pendant laquelle les réservations sont possibles,
+ * comme le déjeuner ou le dîner.
  *
  * @author Nancy Spot Team
  * @version 1.0
+ * @since 1.0
  */
 public class Creneau implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int id;
     private String libelle;
-    private String heureDebut;  // Format HH:MM
-    private String heureFin;    // Format HH:MM
+    private String heureDebut;
+    private String heureFin;
     private boolean actif;
     private int ordreAffichage;
 
     /**
-     * Constructeur par défaut
+     * Constructeur par défaut.
+     * Crée un créneau actif avec un ordre d'affichage de 1.
      */
     public Creneau() {
         this.actif = true;
@@ -28,14 +31,14 @@ public class Creneau implements Serializable {
     }
 
     /**
-     * Constructeur avec tous les paramètres
+     * Constructeur complet pour créer un créneau avec tous ses paramètres.
      *
-     * @param id Identifiant unique du créneau
-     * @param libelle Nom du créneau (ex: "Déjeuner", "Dîner")
-     * @param heureDebut Heure de début au format HH:MM
-     * @param heureFin Heure de fin au format HH:MM
-     * @param actif Indique si le créneau est actif
-     * @param ordreAffichage Ordre d'affichage dans l'interface
+     * @param id l'identifiant unique du créneau
+     * @param libelle le nom du créneau (ex: "Déjeuner", "Dîner")
+     * @param heureDebut l'heure de début au format HH:MM
+     * @param heureFin l'heure de fin au format HH:MM
+     * @param actif indique si le créneau est actif
+     * @param ordreAffichage l'ordre d'affichage dans l'interface
      */
     public Creneau(int id, String libelle, String heureDebut, String heureFin,
                    boolean actif, int ordreAffichage) {
@@ -48,11 +51,11 @@ public class Creneau implements Serializable {
     }
 
     /**
-     * Constructeur simplifié pour créer un créneau actif
+     * Constructeur simplifié pour créer un créneau actif.
      *
-     * @param libelle Nom du créneau
-     * @param heureDebut Heure de début au format HH:MM
-     * @param heureFin Heure de fin au format HH:MM
+     * @param libelle le nom du créneau
+     * @param heureDebut l'heure de début au format HH:MM
+     * @param heureFin l'heure de fin au format HH:MM
      */
     public Creneau(String libelle, String heureDebut, String heureFin) {
         this.libelle = libelle;
@@ -62,78 +65,134 @@ public class Creneau implements Serializable {
         this.ordreAffichage = 1;
     }
 
-    // ==================== GETTERS ET SETTERS ====================
-
+    /**
+     * Retourne l'identifiant unique du créneau.
+     *
+     * @return l'identifiant du créneau
+     */
     public int getId() {
         return id;
     }
 
+    /**
+     * Définit l'identifiant unique du créneau.
+     *
+     * @param id l'identifiant à assigner au créneau
+     */
     public void setId(int id) {
         this.id = id;
     }
 
+    /**
+     * Retourne le libellé du créneau.
+     *
+     * @return le libellé du créneau
+     */
     public String getLibelle() {
         return libelle;
     }
 
+    /**
+     * Définit le libellé du créneau.
+     *
+     * @param libelle le libellé à assigner au créneau
+     */
     public void setLibelle(String libelle) {
         this.libelle = libelle;
     }
 
+    /**
+     * Retourne l'heure de début du créneau.
+     *
+     * @return l'heure de début au format HH:MM
+     */
     public String getHeureDebut() {
         return heureDebut;
     }
 
+    /**
+     * Définit l'heure de début du créneau.
+     *
+     * @param heureDebut l'heure de début au format HH:MM
+     */
     public void setHeureDebut(String heureDebut) {
         this.heureDebut = heureDebut;
     }
 
+    /**
+     * Retourne l'heure de fin du créneau.
+     *
+     * @return l'heure de fin au format HH:MM
+     */
     public String getHeureFin() {
         return heureFin;
     }
 
+    /**
+     * Définit l'heure de fin du créneau.
+     *
+     * @param heureFin l'heure de fin au format HH:MM
+     */
     public void setHeureFin(String heureFin) {
         this.heureFin = heureFin;
     }
 
+    /**
+     * Indique si le créneau est actif.
+     *
+     * @return true si le créneau est actif, false sinon
+     */
     public boolean isActif() {
         return actif;
     }
 
+    /**
+     * Définit si le créneau est actif.
+     *
+     * @param actif true pour activer le créneau, false pour le désactiver
+     */
     public void setActif(boolean actif) {
         this.actif = actif;
     }
 
+    /**
+     * Retourne l'ordre d'affichage du créneau.
+     *
+     * @return l'ordre d'affichage
+     */
     public int getOrdreAffichage() {
         return ordreAffichage;
     }
 
+    /**
+     * Définit l'ordre d'affichage du créneau.
+     *
+     * @param ordreAffichage l'ordre d'affichage à assigner
+     */
     public void setOrdreAffichage(int ordreAffichage) {
         this.ordreAffichage = ordreAffichage;
     }
 
-    // ==================== MÉTHODES UTILITAIRES ====================
-
     /**
-     * Retourne une description complète du créneau
+     * Retourne une description complète du créneau.
      *
-     * @return Description formatée (ex: "Déjeuner (12:00 - 14:30)")
+     * @return une description formatée (ex: "Déjeuner (12:00 - 14:30)")
      */
     public String getDescription() {
         return libelle + " (" + heureDebut + " - " + heureFin + ")";
     }
 
     /**
-     * Retourne la plage horaire du créneau
+     * Retourne la plage horaire du créneau.
      *
-     * @return Plage horaire formatée (ex: "12:00 - 14:30")
+     * @return la plage horaire formatée (ex: "12:00 - 14:30")
      */
     public String getPlageHoraire() {
         return heureDebut + " - " + heureFin;
     }
 
     /**
-     * Vérifie si le créneau est valide (heure début < heure fin)
+     * Vérifie si le créneau est valide (heure début antérieure à heure fin).
      *
      * @return true si le créneau est valide, false sinon
      */
@@ -143,7 +202,6 @@ public class Creneau implements Serializable {
         }
 
         try {
-            // Conversion simple pour comparaison HH:MM
             String[] debut = heureDebut.split(":");
             String[] fin = heureFin.split(":");
 
@@ -162,7 +220,7 @@ public class Creneau implements Serializable {
     }
 
     /**
-     * Vérifie si le créneau peut être utilisé pour les réservations
+     * Vérifie si le créneau peut être utilisé pour les réservations.
      *
      * @return true si le créneau est actif et valide
      */
@@ -170,8 +228,12 @@ public class Creneau implements Serializable {
         return actif && isValide();
     }
 
-    // ==================== MÉTHODES STANDARD ====================
-
+    /**
+     * Compare deux créneaux pour l'égalité basée sur l'identifiant.
+     *
+     * @param obj l'objet à comparer
+     * @return true si les objets sont égaux, false sinon
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -181,11 +243,21 @@ public class Creneau implements Serializable {
         return id == creneau.id;
     }
 
+    /**
+     * Retourne le code de hachage basé sur l'identifiant.
+     *
+     * @return le code de hachage
+     */
     @Override
     public int hashCode() {
         return Integer.hashCode(id);
     }
 
+    /**
+     * Retourne une représentation textuelle du créneau.
+     *
+     * @return une chaîne de caractères décrivant le créneau
+     */
     @Override
     public String toString() {
         return "Creneau{" +
@@ -199,10 +271,9 @@ public class Creneau implements Serializable {
     }
 
     /**
-     * Retourne une représentation JSON-friendly du créneau
-     * Utile pour les réponses API
+     * Retourne une représentation simple du créneau pour l'affichage.
      *
-     * @return Représentation simple du créneau
+     * @return une représentation simple du créneau
      */
     public String toDisplayString() {
         return libelle + " (" + heureDebut + "-" + heureFin + ")";

@@ -6,17 +6,55 @@ import rmi.Serveur;
 import utils.HttpUtils;
 
 import java.io.IOException;
+
 /**
- * Handler amélioré pour les tables avec support des créneaux
- * Gère plusieurs endpoints pour la disponibilité des tables
+ * Handler HTTP pour la gestion des tables avec support des créneaux horaires.
+ *
+ * Ce handler traite les requêtes en rapport avec la disponibilité des tables
+ * des créneaux pour une gestion fine des réservations.
+ *
+ * Endpoints gérés :
+ * - GET /tables/libres/{restaurantId}/{date}/{creneauId} : Tables libres pour un créneau
+ * - GET /tables/statut/{restaurantId}/{date}/{creneauId} : Statut de toutes les tables
+ * - GET /tables/disponibilite/{tableId}/{date}/{creneauId} : Vérifier une table spécifique
+ *
+ * Ce handler permet :
+ * - La consultation des disponibilités par créneau
+ * - La vérification de statut en temps réel
+ * - Le support des interfaces d'administration
+ * - La compatibilité avec l'ancien système
+ *
+ * @author Nancy Spot Team
+ * @version 2.0
+ * @since 2.0
  */
 public class TablesCreneauxHandler implements HttpHandler {
+
     private final Serveur serviceCentral;
 
+    /**
+     * Constructeur du handler des tables avec créneaux.
+     *
+     * @param serviceCentral l'instance du service central qui fait le lien avec le service BD
+     */
     public TablesCreneauxHandler(Serveur serviceCentral) {
         this.serviceCentral = serviceCentral;
     }
 
+    /**
+     * Traite les requêtes HTTP pour les endpoints /tables/*.
+     *
+     * Cette méthode route les requêtes selon le pattern d'URL pour supporter
+     * différents types de consultation des tables :
+     * - Tables libres pour un créneau spécifique
+     * - Statut complet de toutes les tables
+     * - Vérification de disponibilité d'une table
+     * - Endpoints legacy pour la compatibilité
+     *
+     *
+     * @param exchange l'échange HTTP contenant la requête et permettant d'envoyer la réponse
+     * @throws IOException en cas d'erreur lors de la lecture de la requête ou l'envoi de la réponse
+     */
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
@@ -27,16 +65,53 @@ public class TablesCreneauxHandler implements HttpHandler {
             handleTablesStatut(exchange);
         } else if (path.startsWith("/tables/disponibilite/")) {
             handleVerifierDisponibilite(exchange);
-        } else if (path.startsWith("/tables/")) {
-            // Ancien endpoint pour compatibilité
-            handleTablesLegacy(exchange);
         } else {
             HttpUtils.sendError(exchange, 404, "Endpoint non trouvé");
         }
     }
 
     /**
-     * GET /tables/libres/{restaurantId}/{date}/{creneauId}
+     * Gère l'endpoint GET /tables/libres/{restaurantId}/{date}/{creneauId}.
+     *
+     * Récupère uniquement les tables disponibles (libres) pour un restaurant,
+     * une date et un créneau spécifiques. Cette méthode est optimisée pour
+     * les interfaces de réservation où seules les tables disponibles importent.
+     *
+     * Format d'URL : /tables/libres/{restaurantId}/{date}/{creneauId}
+     * - restaurantId : Identifiant numérique du restaurant
+     * - date : Date au format yyyy-MM-dd
+     * - creneauId : Identifiant numérique du créneau horaire
+     *
+     * Exemple : /tables/libres/1/2024-12-25/2
+     *
+     * Filtrage appliqué :
+     * - Tables sans réservation confirmée pour le créneau/date
+     * - Tables ayant une capacité suffisante (selon le contexte)
+     * - Tables en statut "libre" dans la base
+     *
+     * Réponse en cas de succès :
+     * - Code HTTP 200
+     * - Content-Type: application/json
+     * - Corps : JSON avec les tables disponibles
+     *
+     * Structure de réponse :
+     * {
+     *   "tables": [
+     *     {
+     *       "id": 15,
+     *       "numeroTable": 5,
+     *       "nbPlaces": 4,
+     *       "statut": "libre"
+     *     }
+     *   ],
+     *   "restaurantId": 1,
+     *   "date": "2024-12-25",
+     *   "creneauId": 2,
+     *   "disponibles": 3
+     * }
+     *
+     * @param exchange l'échange HTTP en cours de traitement
+     * @throws IOException en cas d'erreur lors du traitement
      */
     private void handleTablesLibresCreneau(HttpExchange exchange) throws IOException {
         try {
@@ -59,7 +134,61 @@ public class TablesCreneauxHandler implements HttpHandler {
     }
 
     /**
-     * GET /tables/statut/{restaurantId}/{date}/{creneauId}
+     * Gère l'endpoint GET /tables/statut/{restaurantId}/{date}/{creneauId}.
+     *
+     * Récupère toutes les tables d'un restaurant avec leur statut de disponibilité
+     * pour une date et un créneau donnés. Contrairement à l'endpoint /libres,
+     * celui-ci retourne toutes les tables avec indication de leur disponibilité.
+     *
+     * Format d'URL : /tables/statut/{restaurantId}/{date}/{creneauId}
+     * - restaurantId : Identifiant numérique du restaurant
+     * - date : Date au format yyyy-MM-dd
+     * - creneauId : Identifiant numérique du créneau horaire
+     *
+     * Exemple : /tables/statut/1/2024-12-25/2
+     *
+     * Informations fournies :
+     * - Toutes les tables du restaurant
+     * - Statut de disponibilité pour le créneau/date
+     * - Détails des réservations existantes (anonymisées)
+     * - Capacité et numéro de chaque table
+     *
+     *
+     * Réponse en cas de succès :
+     * - Code HTTP 200
+     * - Content-Type: application/json
+     * - Corps : JSON avec toutes les tables et leur statut
+     *
+     * Structure de réponse :
+     * {
+     *   "tables": [
+     *     {
+     *       "id": 15,
+     *       "numeroTable": 5,
+     *       "nbPlaces": 4,
+     *       "statut": "libre"
+     *     },
+     *     {
+     *       "id": 16,
+     *       "numeroTable": 6,
+     *       "nbPlaces": 2,
+     *       "statut": "occupee",
+     *       "reservationInfo": {
+     *         "heureReservation": "12:00",
+     *         "nbConvives": 2
+     *       }
+     *     }
+     *   ],
+     *   "restaurantId": 1,
+     *   "date": "2024-12-25",
+     *   "creneauId": 2,
+     *   "totalTables": 15,
+     *   "tablesLibres": 12,
+     *   "tablesOccupees": 3
+     * }
+     *
+     * @param exchange l'échange HTTP en cours de traitement
+     * @throws IOException en cas d'erreur lors du traitement
      */
     private void handleTablesStatut(HttpExchange exchange) throws IOException {
         try {
@@ -82,7 +211,44 @@ public class TablesCreneauxHandler implements HttpHandler {
     }
 
     /**
-     * GET /tables/disponibilite/{tableId}/{date}/{creneauId}
+     * Gère l'endpoint GET /tables/disponibilite/{tableId}/{date}/{creneauId}.
+     *
+     * Vérifie la disponibilité d'une table spécifique pour un créneau et une date.
+     * Cette méthode est utilisée pour valider une réservation avant confirmation
+     * ou pour vérifier l'état d'une table particulière.
+     *
+     * Format d'URL : /tables/disponibilite/{tableId}/{date}/{creneauId}
+     * - tableId : Identifiant numérique de la table à vérifier
+     * - date : Date au format yyyy-MM-dd
+     * - creneauId : Identifiant numérique du créneau horaire
+     *
+     * Exemple : /tables/disponibilite/15/2024-12-25/2
+     *
+     * Réponse en cas de succès :
+     * - Code HTTP 200
+     * - Content-Type: application/json
+     * - Corps : JSON avec le statut de disponibilité
+     *
+     * Structure de réponse :
+     * {
+     *   "disponible": true,
+     *   "tableId": 15,
+     *   "date": "2024-12-25",
+     *   "creneauId": 2,
+     *   "table": {
+     *     "numeroTable": 5,
+     *     "nbPlaces": 4,
+     *     "statut": "libre"
+     *   },
+     *   "creneau": {
+     *     "libelle": "Déjeuner",
+     *     "heureDebut": "12:00",
+     *     "heureFin": "14:30"
+     *   }
+     * }
+     *
+     * @param exchange l'échange HTTP en cours de traitement
+     * @throws IOException en cas d'erreur lors du traitement
      */
     private void handleVerifierDisponibilite(HttpExchange exchange) throws IOException {
         try {
@@ -105,52 +271,14 @@ public class TablesCreneauxHandler implements HttpHandler {
     }
 
     /**
-     * Ancien endpoint pour compatibilité descendante
-     * GET /tables/{restaurantId} ou /tables?restaurantId={id}
+     * Extrait les parties du chemin d'URL après un préfixe donné.
+     *
+     * @param path le chemin complet de l'URL
+     * @param prefix le préfixe à retirer du chemin
+     * @return un tableau contenant les parties du chemin après le préfixe
      */
-    private void handleTablesLegacy(HttpExchange exchange) throws IOException {
-        int restaurantId = extractRestaurantId(exchange);
-        if (restaurantId <= 0) {
-            HttpUtils.sendError(exchange, 400, "ID restaurant manquant ou invalide");
-            return;
-        }
-
-        HttpUtils.handleGetRequest(exchange, "/tables", () -> serviceCentral.getTablesLibres(restaurantId));
-    }
-
-    private int extractRestaurantId(HttpExchange exchange) {
-        try {
-            String path = exchange.getRequestURI().getPath();
-            String query = exchange.getRequestURI().getQuery();
-
-            // Format /tables/{id}
-            if (path.startsWith("/tables/")) {
-                String idStr = path.substring("/tables/".length());
-                if (!idStr.isEmpty() && !idStr.contains("/")) {
-                    return Integer.parseInt(idStr);
-                }
-            }
-
-            // Format /tables?restaurantId={id}
-            if (query != null && !query.isEmpty()) {
-                String[] params = query.split("&");
-                for (String param : params) {
-                    String[] keyValue = param.split("=", 2);
-                    if (keyValue.length == 2 && "restaurantId".equals(keyValue[0])) {
-                        return Integer.parseInt(keyValue[1]);
-                    }
-                }
-            }
-
-            return -1;
-        } catch (NumberFormatException e) {
-            return -1;
-        }
-    }
-
     private String[] extractPathParts(String path, String prefix) {
         String remaining = path.substring(prefix.length());
         return remaining.split("/");
     }
 }
-

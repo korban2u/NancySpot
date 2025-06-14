@@ -1,6 +1,5 @@
 /**
  * Configuration globale de l'application Nancy Spot
- * Version améliorée avec support des créneaux horaires
  * @module config/constants
  */
 export const NANCY_CONFIG = {
