@@ -120,6 +120,7 @@ frontend/.parcel-cache/
 webetu-local/
 *.pid
 registry.port
+package-lock.json
 
 # Archives
 *.zip
