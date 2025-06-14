@@ -10,7 +10,7 @@
  */
 export const NANCY_CONFIG = {
     /** URL de base du service central - remplacée lors du build Maven */
-    API_BASE_URL: 'https://172.22.152.208:8443',
+    API_BASE_URL: 'API_BASE_URL_PLACEHOLDER',
 
     /** Points d'entrée de l'API REST */
     ENDPOINTS: {
