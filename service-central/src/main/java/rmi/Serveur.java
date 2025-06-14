@@ -191,22 +191,6 @@ public class Serveur implements ServiceCentral {
         return serviceBD.getCreneauById(creneauId);
     }
 
-    /**
-     * Récupère les tables libres pour un restaurant (version dépréciée).
-     *
-     * @param restaurantId l'identifiant du restaurant
-     * @return un JSON contenant la liste des tables
-     * @throws RemoteException si le service BD n'est pas disponible
-     * @deprecated Utiliser getTablesLibresPourCreneau()
-     */
-    @Deprecated
-    public String getTablesLibres(int restaurantId) throws RemoteException {
-        LOGGER.warning("Appel méthode dépréciée getTablesLibres() - utiliser getTablesLibresPourCreneau()");
-        if (serviceBD == null) {
-            throw new RemoteException("Service BD non disponible");
-        }
-        return serviceBD.getTablesLibres(restaurantId);
-    }
 
     /**
      * Récupère les tables libres pour un restaurant, une date et un créneau.
@@ -260,7 +244,7 @@ public class Serveur implements ServiceCentral {
     }
 
     /**
-     * Effectue une réservation de table avec support des créneaux.
+     * Effectue une réservation de table avec créneaux.
      *
      * @param jsonReservation un JSON contenant les données de réservation
      * @return un JSON contenant le résultat de la réservation
@@ -305,39 +289,7 @@ public class Serveur implements ServiceCentral {
         return serviceBD.annulerReservation(reservationId);
     }
 
-    /**
-     * Récupère les statistiques de réservation pour un restaurant.
-     *
-     * @param restaurantId l'identifiant du restaurant
-     * @param dateDebut la date de début de la période
-     * @param dateFin la date de fin de la période
-     * @return un JSON contenant les statistiques détaillées
-     * @throws RemoteException si le service BD n'est pas disponible
-     */
-    public String getStatistiquesReservations(int restaurantId, String dateDebut, String dateFin) throws RemoteException {
-        LOGGER.info("Appel getStatistiquesReservations(" + restaurantId + ", " + dateDebut + ", " + dateFin + ")");
-        if (serviceBD == null) {
-            throw new RemoteException("Service BD non disponible");
-        }
-        return serviceBD.getStatistiquesReservations(restaurantId, dateDebut, dateFin);
-    }
 
-    /**
-     * Récupère le planning complet d'un restaurant.
-     *
-     * @param restaurantId l'identifiant du restaurant
-     * @param dateDebut la date de début de la période
-     * @param dateFin la date de fin de la période
-     * @return un JSON contenant le planning détaillé
-     * @throws RemoteException si le service BD n'est pas disponible
-     */
-    public String getPlanningRestaurant(int restaurantId, String dateDebut, String dateFin) throws RemoteException {
-        LOGGER.info("Appel getPlanningRestaurant(" + restaurantId + ", " + dateDebut + ", " + dateFin + ")");
-        if (serviceBD == null) {
-            throw new RemoteException("Service BD non disponible");
-        }
-        return serviceBD.getPlanningRestaurant(restaurantId, dateDebut, dateFin);
-    }
 
     /**
      * Récupère les incidents de circulation.
@@ -353,73 +305,4 @@ public class Serveur implements ServiceCentral {
         return serviceProxy.getIncidents();
     }
 
-    /**
-     * Valide les paramètres pour les endpoints avec créneaux.
-     * Vérifie la cohérence des identifiants et du format de date.
-     *
-     * @param restaurantId l'identifiant du restaurant
-     * @param dateReservation la date de réservation
-     * @param creneauId l'identifiant du créneau
-     * @return true si tous les paramètres sont valides
-     */
-    private boolean validateCreneauxParams(int restaurantId, String dateReservation, int creneauId) {
-        if (restaurantId <= 0) {
-            LOGGER.warning("ID restaurant invalide: " + restaurantId);
-            return false;
-        }
-
-        if (creneauId <= 0) {
-            LOGGER.warning("ID créneau invalide: " + creneauId);
-            return false;
-        }
-
-        if (dateReservation == null || dateReservation.trim().isEmpty()) {
-            LOGGER.warning("Date de réservation invalide: " + dateReservation);
-            return false;
-        }
-
-        if (!dateReservation.matches("\\d{4}-\\d{2}-\\d{2}")) {
-            LOGGER.warning("Format de date invalide: " + dateReservation);
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Crée une réponse d'erreur standardisée.
-     *
-     * @param message le message d'erreur principal
-     * @param details les détails additionnels (peut être null)
-     * @return un JSON formaté contenant l'erreur
-     */
-    private String createErrorResponse(String message, String details) {
-        JSONObject error = new JSONObject();
-        error.put("error", true);
-        error.put("message", message);
-        if (details != null) {
-            error.put("details", details);
-        }
-        error.put("timestamp", System.currentTimeMillis());
-        return error.toString();
-    }
-
-    /**
-     * Enregistre les appels d'API pour le débogage.
-     *
-     * @param method le nom de la méthode appelée
-     * @param params les paramètres de la méthode
-     */
-    private void logApiCall(String method, Object... params) {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("API Call: ").append(method).append("(");
-            for (int i = 0; i < params.length; i++) {
-                if (i > 0) sb.append(", ");
-                sb.append(params[i]);
-            }
-            sb.append(")");
-            LOGGER.info(sb.toString());
-        }
-    }
 }

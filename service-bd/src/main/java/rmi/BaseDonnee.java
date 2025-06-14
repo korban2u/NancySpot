@@ -18,7 +18,8 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 /**
- * Implémentation du service BD avec support des créneaux horaires
+ * Implémentation du service BD avec support des créneaux horaires.
+ * Service RMI responsable de toutes les opérations de base de données.
  */
 public class BaseDonnee implements ServiceBD {
 
@@ -28,12 +29,17 @@ public class BaseDonnee implements ServiceBD {
 
     private final RestaurantDAO restaurantDAO;
 
+    /**
+     * Constructeur du service BD.
+     *
+     * @param dbUrl URL de la base de données
+     * @param dbUser utilisateur de la base
+     * @param dbPassword mot de passe de la base
+     */
     public BaseDonnee(String dbUrl, String dbUser, String dbPassword) {
         this.restaurantDAO = new RestaurantDAO(dbUrl, dbUser, dbPassword);
         LOGGER.info("ServiceBD créé avec support des créneaux");
     }
-
-    // ==================== MÉTHODES RESTAURANTS ====================
 
     @Override
     public String getAllRestaurants() throws RemoteException {
@@ -66,8 +72,6 @@ public class BaseDonnee implements ServiceBD {
             return createErrorResponse("Erreur lors de la récupération des restaurants", e);
         }
     }
-
-    // ==================== MÉTHODES CRÉNEAUX ====================
 
     @Override
     public String getCreneauxDisponibles() throws RemoteException {
@@ -139,28 +143,13 @@ public class BaseDonnee implements ServiceBD {
         }
     }
 
-    // ==================== MÉTHODES TABLES ====================
 
-    @Override
-    @Deprecated
-    public String getTablesLibres(int restaurantId) throws RemoteException {
-        LOGGER.warning("Appel méthode dépréciée getTablesLibres() - utiliser getTablesLibresPourCreneau()");
-
-        try {
-            List<TableResto> tables = restaurantDAO.findAllTablesRestaurant(restaurantId);
-            return formatTablesResponse(tables, restaurantId, "toutes", 0);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur getTablesLibres", e);
-            return createErrorResponse("Erreur lors de la récupération des tables", e);
-        }
-    }
 
     @Override
     public String getTablesLibresPourCreneau(int restaurantId, String dateReservation, int creneauId) throws RemoteException {
         LOGGER.info("Appel getTablesLibresPourCreneau(" + restaurantId + ", " + dateReservation + ", " + creneauId + ")");
 
         try {
-            // Validation des paramètres
             if (!isValidDate(dateReservation)) {
                 return createValidationError("Date invalide. Format attendu: yyyy-MM-dd");
             }
@@ -179,7 +168,6 @@ public class BaseDonnee implements ServiceBD {
         LOGGER.info("Appel getTablesAvecStatut(" + restaurantId + ", " + dateReservation + ", " + creneauId + ")");
 
         try {
-            // Validation des paramètres
             if (!isValidDate(dateReservation)) {
                 return createValidationError("Date invalide. Format attendu: yyyy-MM-dd");
             }
@@ -214,7 +202,6 @@ public class BaseDonnee implements ServiceBD {
         }
     }
 
-    // ==================== MÉTHODES RÉSERVATIONS ====================
 
     @Override
     public String reserverTable(String jsonReservation) throws RemoteException {
@@ -246,10 +233,8 @@ public class BaseDonnee implements ServiceBD {
 
             try {
                 if (dateStr.contains(" ")) {
-                    // Format avec heure (compatibilité)
                     dateReservation = DATETIME_FORMAT.parse(dateStr);
                 } else {
-                    // Format date seule
                     dateReservation = DATE_FORMAT.parse(dateStr);
                 }
                 reservation.setDateReservation(dateReservation);
@@ -257,12 +242,10 @@ public class BaseDonnee implements ServiceBD {
                 return createValidationError("Format de date invalide. Utilisez yyyy-MM-dd ou yyyy-MM-dd HH:mm");
             }
 
-            // Validation métier
             if (!reservation.isValide()) {
                 return createValidationError("Données de réservation invalides");
             }
 
-            // Tentative de réservation
             boolean success = restaurantDAO.reserverTable(reservation);
 
             JSONObject response = new JSONObject();
@@ -368,35 +351,17 @@ public class BaseDonnee implements ServiceBD {
         }
     }
 
-    // ==================== MÉTHODES NON IMPLÉMENTÉES (FUTURES) ====================
 
-    @Override
-    public String getStatistiquesReservations(int restaurantId, String dateDebut, String dateFin) throws RemoteException {
-        // TODO: Implémenter les statistiques
-        JSONObject response = new JSONObject();
-        response.put("error", true);
-        response.put("message", "Fonctionnalité non encore implémentée");
-        return response.toString();
-    }
-
-    @Override
-    public String getPlanningRestaurant(int restaurantId, String dateDebut, String dateFin) throws RemoteException {
-        // TODO: Implémenter le planning
-        JSONObject response = new JSONObject();
-        response.put("error", true);
-        response.put("message", "Fonctionnalité non encore implémentée");
-        return response.toString();
-    }
-
-    // ==================== MÉTHODES SYSTÈME ====================
 
     @Override
     public boolean ping() throws RemoteException {
         return true;
     }
 
-    // ==================== MÉTHODES UTILITAIRES ====================
 
+    /**
+     * Formate une liste de tables en réponse JSON.
+     */
     private String formatTablesResponse(List<TableResto> tables, int restaurantId, String date, int creneauId) {
         JSONArray jsonArray = new JSONArray();
         for (TableResto table : tables) {
@@ -422,6 +387,9 @@ public class BaseDonnee implements ServiceBD {
         return response.toString();
     }
 
+    /**
+     * Formate une réservation en JSON.
+     */
     private JSONObject formatReservationJson(Reservation reservation) {
         JSONObject jsonReservation = new JSONObject();
         jsonReservation.put("id", reservation.getId());
@@ -458,6 +426,9 @@ public class BaseDonnee implements ServiceBD {
         return jsonReservation;
     }
 
+    /**
+     * Crée une réponse d'erreur.
+     */
     private String createErrorResponse(String message, Exception e) {
         JSONObject errorResponse = new JSONObject();
         errorResponse.put("error", true);
@@ -466,6 +437,9 @@ public class BaseDonnee implements ServiceBD {
         return errorResponse.toString();
     }
 
+    /**
+     * Crée une erreur de validation.
+     */
     private String createValidationError(String message) {
         JSONObject errorResponse = new JSONObject();
         errorResponse.put("error", true);
@@ -475,6 +449,9 @@ public class BaseDonnee implements ServiceBD {
         return errorResponse.toString();
     }
 
+    /**
+     * Valide le format d'une date.
+     */
     private boolean isValidDate(String dateString) {
         try {
             DATE_FORMAT.parse(dateString);

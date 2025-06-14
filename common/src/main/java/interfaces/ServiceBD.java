@@ -39,17 +39,6 @@ public interface ServiceBD extends Remote {
      */
     String getCreneauById(int creneauId) throws RemoteException;
 
-    /**
-     * Récupère les tables libres pour un restaurant donné.
-     * Version sans créneau maintenue pour compatibilité descendante.
-     *
-     * @param restaurantId l'identifiant du restaurant
-     * @return un JSON contenant la liste des tables
-     * @throws RemoteException en cas d'erreur de communication RMI
-     * @deprecated Utiliser getTablesLibresPourCreneau() à la place
-     */
-    @Deprecated
-    String getTablesLibres(int restaurantId) throws RemoteException;
 
     /**
      * Récupère les tables libres pour un restaurant, une date et un créneau donnés.
@@ -114,7 +103,7 @@ public interface ServiceBD extends Remote {
     String getReservationsPourDate(int restaurantId, String dateReservation) throws RemoteException;
 
     /**
-     * Annule une réservation existante.
+     * Annule une réservation existante. pas eu le temps d'implémenter :(
      * Change le statut de la réservation à "annulee" et libère la table.
      *
      * @param reservationId l'identifiant de la réservation à annuler
@@ -123,30 +112,6 @@ public interface ServiceBD extends Remote {
      */
     String annulerReservation(int reservationId) throws RemoteException;
 
-    /**
-     * Récupère les statistiques de réservation pour un restaurant.
-     * Fournit des métriques sur les réservations par créneau, taux d'occupation,
-     * et autres indicateurs de performance sur une période donnée.
-     *
-     * @param restaurantId l'identifiant du restaurant
-     * @param dateDebut la date de début de la période au format "yyyy-MM-dd"
-     * @param dateFin la date de fin de la période au format "yyyy-MM-dd"
-     * @return un JSON contenant les statistiques détaillées
-     * @throws RemoteException en cas d'erreur de communication RMI
-     */
-    String getStatistiquesReservations(int restaurantId, String dateDebut, String dateFin) throws RemoteException;
-
-    /**
-     * Récupère le planning complet d'un restaurant pour une période donnée.
-     * Retourne un planning détaillé par date et créneau avec toutes les réservations.
-     *
-     * @param restaurantId l'identifiant du restaurant
-     * @param dateDebut la date de début au format "yyyy-MM-dd"
-     * @param dateFin la date de fin au format "yyyy-MM-dd"
-     * @return un JSON contenant le planning détaillé
-     * @throws RemoteException en cas d'erreur de communication RMI
-     */
-    String getPlanningRestaurant(int restaurantId, String dateDebut, String dateFin) throws RemoteException;
 
     /**
      * Test de connectivité du service de base de données.

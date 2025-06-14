@@ -3,7 +3,6 @@ import interfaces.ServiceBD;
 import rmi.BaseDonnee;
 import utils.ConfigManager;
 
-
 import java.rmi.Remote;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -11,11 +10,20 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
-
+/**
+ * Point d'entrée du service BD.
+ * Lance le service de base de données et l'enregistre auprès du service central.
+ */
 public class Main {
 
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
 
+    /**
+     * Point d'entrée principal du service BD.
+     * Charge la configuration, démarre le service et l'enregistre au service central.
+     *
+     * @param args arguments de ligne de commande (optionnel : fichier de config)
+     */
     public static void main(String[] args) {
         try {
             ConfigManager configManager = new ConfigManager(args.length > 0 ? args[0] : null);
@@ -30,7 +38,6 @@ public class Main {
 
             Registry registry = LocateRegistry.getRegistry(config.centralHost, config.centralPort);
             ServiceCentral serviceCentral =  (ServiceCentral) registry.lookup("ServiceCentral");
-
 
             boolean inscrit = serviceCentral.enregistrerServiceBD(serviceBDStub);
 
@@ -52,12 +59,21 @@ public class Main {
         }
     }
 
+    /**
+     * Affiche la configuration dans les logs.
+     *
+     * @param config la configuration à afficher
+     */
     private static void logConfig(BDConfig config) {
         LOGGER.info("URL BD: " + config.jdbcUrl);
         LOGGER.info("Service Central: " + config.centralHost + ":" + config.centralPort);
     }
 
-
+    /**
+     * Configure un hook d'arrêt pour se désenregistrer proprement.
+     *
+     * @param serviceCentral le service central pour la désinscription
+     */
     private static void addShutdownHook(ServiceCentral serviceCentral) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {

@@ -14,7 +14,8 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 /**
- * DAO pour la gestion des restaurants, tables et réservations avec support des créneaux
+ * DAO pour la gestion des restaurants, tables et réservations avec support des créneaux.
+ * Assure la persistance des données dans la base Oracle.
  */
 public class RestaurantDAO {
 
@@ -25,14 +26,25 @@ public class RestaurantDAO {
     private final String dbUser;
     private final String dbPassword;
 
+    /**
+     * Constructeur du DAO.
+     *
+     * @param dbUrl URL de connexion à la base
+     * @param dbUser nom d'utilisateur
+     * @param dbPassword mot de passe
+     */
     public RestaurantDAO(String dbUrl, String dbUser, String dbPassword) {
         this.dbUrl = dbUrl;
         this.dbUser = dbUser;
         this.dbPassword = dbPassword;
     }
 
-    // ==================== MÉTHODES RESTAURANTS ====================
-
+    /**
+     * Récupère tous les restaurants.
+     *
+     * @return liste des restaurants
+     * @throws SQLException en cas d'erreur SQL
+     */
     public List<Restaurant> findAll() throws SQLException {
         List<Restaurant> restaurants = new ArrayList<>();
         String sql = "SELECT id, nom, adresse, telephone, latitude, longitude FROM restaurant ORDER BY nom";
@@ -62,10 +74,11 @@ public class RestaurantDAO {
         return restaurants;
     }
 
-    // ==================== MÉTHODES CRÉNEAUX ====================
-
     /**
-     * Récupère tous les créneaux actifs triés par ordre d'affichage
+     * Récupère tous les créneaux actifs triés par ordre d'affichage.
+     *
+     * @return liste des créneaux actifs
+     * @throws SQLException en cas d'erreur SQL
      */
     public List<Creneau> findCreneauxActifs() throws SQLException {
         List<Creneau> creneaux = new ArrayList<>();
@@ -98,7 +111,11 @@ public class RestaurantDAO {
     }
 
     /**
-     * Récupère un créneau par son ID
+     * Récupère un créneau par son ID.
+     *
+     * @param creneauId identifiant du créneau
+     * @return le créneau ou null si non trouvé
+     * @throws SQLException en cas d'erreur SQL
      */
     public Creneau findCreneauById(int creneauId) throws SQLException {
         String sql = "SELECT id, libelle, heure_debut, heure_fin, actif, ordre_affichage " +
@@ -130,18 +147,12 @@ public class RestaurantDAO {
         return null;
     }
 
-    // ==================== MÉTHODES TABLES ====================
-
     /**
-     * Méthode dépréciée - utiliser findTablesLibresPourCreneau à la place
-     */
-    @Deprecated
-    public List<TableResto> findTablesLibres(int restaurantId) throws SQLException {
-        return findAllTablesRestaurant(restaurantId);
-    }
-
-    /**
-     * Récupère toutes les tables d'un restaurant
+     * Récupère toutes les tables d'un restaurant.
+     *
+     * @param restaurantId identifiant du restaurant
+     * @return liste des tables
+     * @throws SQLException en cas d'erreur SQL
      */
     public List<TableResto> findAllTablesRestaurant(int restaurantId) throws SQLException {
         List<TableResto> tables = new ArrayList<>();
@@ -175,7 +186,13 @@ public class RestaurantDAO {
     }
 
     /**
-     * Récupère les tables libres pour un restaurant, une date et un créneau donnés
+     * Récupère les tables libres pour un restaurant, une date et un créneau donnés.
+     *
+     * @param restaurantId identifiant du restaurant
+     * @param dateReservation date de réservation
+     * @param creneauId identifiant du créneau
+     * @return liste des tables libres
+     * @throws SQLException en cas d'erreur SQL
      */
     public List<TableResto> findTablesLibresPourCreneau(int restaurantId, String dateReservation,
                                                         int creneauId) throws SQLException {
@@ -206,7 +223,7 @@ public class RestaurantDAO {
                     table.setRestaurantId(rs.getInt("restaurant_id"));
                     table.setNumeroTable(rs.getInt("numero_table"));
                     table.setNbPlaces(rs.getInt("nb_places"));
-                    table.setStatut("libre"); // Par défaut libre pour cette requête
+                    table.setStatut("libre");
                     tables.add(table);
                 }
             }
@@ -223,7 +240,13 @@ public class RestaurantDAO {
     }
 
     /**
-     * Récupère toutes les tables avec leur statut pour une date et un créneau
+     * Récupère toutes les tables avec leur statut pour une date et un créneau.
+     *
+     * @param restaurantId identifiant du restaurant
+     * @param dateReservation date de réservation
+     * @param creneauId identifiant du créneau
+     * @return liste des tables avec statut
+     * @throws SQLException en cas d'erreur SQL
      */
     public List<TableResto> findTablesAvecStatut(int restaurantId, String dateReservation,
                                                  int creneauId) throws SQLException {
@@ -268,10 +291,14 @@ public class RestaurantDAO {
         return tables;
     }
 
-    // ==================== MÉTHODES RÉSERVATIONS ====================
-
     /**
-     * Vérifie la disponibilité d'une table pour un créneau et une date
+     * Vérifie la disponibilité d'une table pour un créneau et une date.
+     *
+     * @param tableId identifiant de la table
+     * @param dateReservation date de réservation
+     * @param creneauId identifiant du créneau
+     * @return true si disponible
+     * @throws SQLException en cas d'erreur SQL
      */
     public boolean verifierDisponibilite(int tableId, String dateReservation, int creneauId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM reservation " +
@@ -288,7 +315,7 @@ public class RestaurantDAO {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt(1) == 0; // Disponible si aucune réservation trouvée
+                    return rs.getInt(1) == 0;
                 }
             }
 
@@ -301,7 +328,11 @@ public class RestaurantDAO {
     }
 
     /**
-     * Effectue une réservation avec gestion transactionnelle
+     * Effectue une réservation.
+     *
+     * @param reservation la réservation à effectuer
+     * @return true si succès
+     * @throws SQLException en cas d'erreur SQL
      */
     public boolean reserverTable(Reservation reservation) throws SQLException {
         Connection conn = null;
@@ -312,7 +343,7 @@ public class RestaurantDAO {
             conn = getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Vérifier la disponibilité avec verrou sur la table
+            // Vérifier la disponibilité
             String sqlCheck = "SELECT COUNT(*) FROM reservation " +
                     "WHERE table_id = ? AND creneau_id = ? " +
                     "AND date_reservation = ? AND statut = 'confirmee'";
@@ -330,7 +361,7 @@ public class RestaurantDAO {
                 }
             }
 
-            // 2. Insérer la réservation
+            // Insérer la réservation
             String sqlInsert = "INSERT INTO reservation " +
                     "(id, table_id, creneau_id, date_reservation, nom_client, prenom_client, " +
                     "telephone, nb_convives, date_creation, statut) " +
@@ -360,7 +391,6 @@ public class RestaurantDAO {
                 }
             }
 
-            // 3. Valider la transaction
             conn.commit();
             LOGGER.info("Réservation effectuée avec succès, ID: " + reservation.getId());
             return true;
@@ -390,7 +420,12 @@ public class RestaurantDAO {
     }
 
     /**
-     * Récupère les réservations pour un restaurant et une date donnée
+     * Récupère les réservations pour un restaurant et une date donnée.
+     *
+     * @param restaurantId identifiant du restaurant
+     * @param dateReservation date de réservation
+     * @return liste des réservations
+     * @throws SQLException en cas d'erreur SQL
      */
     public List<Reservation> findReservationsPourDate(int restaurantId, String dateReservation) throws SQLException {
         List<Reservation> reservations = new ArrayList<>();
@@ -457,7 +492,11 @@ public class RestaurantDAO {
     }
 
     /**
-     * Annule une réservation
+     * Annule une réservation.
+     *
+     * @param reservationId identifiant de la réservation
+     * @return true si succès
+     * @throws SQLException en cas d'erreur SQL
      */
     public boolean annulerReservation(int reservationId) throws SQLException {
         String sql = "UPDATE reservation SET statut = 'annulee' WHERE id = ? AND statut = 'confirmee'";
@@ -482,12 +521,22 @@ public class RestaurantDAO {
         }
     }
 
-    // ==================== MÉTHODES UTILITAIRES ====================
 
+    /**
+     * Obtient une connexion à la base de données.
+     *
+     * @return connexion JDBC
+     * @throws SQLException en cas d'erreur de connexion
+     */
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
     }
 
+    /**
+     * Ferme une ressource de manière silencieuse.
+     *
+     * @param resource la ressource à fermer
+     */
     private void closeQuietly(AutoCloseable resource) {
         if (resource != null) {
             try {
@@ -496,19 +545,5 @@ public class RestaurantDAO {
                 LOGGER.log(Level.WARNING, "Erreur fermeture ressource", e);
             }
         }
-    }
-
-    /**
-     * Utilitaire pour convertir une chaîne de date en java.util.Date
-     */
-    private java.util.Date parseDate(String dateString) throws ParseException {
-        return DATE_FORMAT.parse(dateString);
-    }
-
-    /**
-     * Utilitaire pour convertir une java.util.Date en chaîne
-     */
-    private String formatDate(java.util.Date date) {
-        return DATE_FORMAT.format(date);
     }
 }
