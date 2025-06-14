@@ -124,8 +124,6 @@ public class HttpServerCentral {
         HttpContext reserverContext = server.createContext("/reserver",
                 new ReserverHandler(serviceCentral));
 
-        HttpContext velibContext = server.createContext("/velib",
-                new VelibHandler(serviceCentral));
 
         HttpContext incidentsContext = server.createContext("/incidents",
                 new IncidentsHandler(serviceCentral));
@@ -137,7 +135,6 @@ public class HttpServerCentral {
         restaurantsContext.getFilters().add(corsFilter);
         tablesContext.getFilters().add(corsFilter);
         reserverContext.getFilters().add(corsFilter);
-        velibContext.getFilters().add(corsFilter);
         incidentsContext.getFilters().add(corsFilter);
         etatContext.getFilters().add(corsFilter);
 

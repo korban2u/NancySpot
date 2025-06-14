@@ -139,12 +139,6 @@ public class Serveur implements ServiceCentral {
         return serviceBD.reserverTable(jsonReservation);
     }
 
-    public String getVelibData() throws RemoteException {
-        if (serviceProxy == null) {
-            throw new RemoteException("Service Proxy non disponible");
-        }
-        return serviceProxy.getVelibData();
-    }
 
     public String getIncidents() throws RemoteException {
         if (serviceProxy == null) {
