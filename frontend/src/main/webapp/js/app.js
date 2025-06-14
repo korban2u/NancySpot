@@ -10,13 +10,13 @@ import { IncidentManager } from './managers/incidentManager.js';
 Handlebars.registerHelper('eq', (a, b) => a === b);
 
 /**
- * Application principale Nancy Interactive
+ * Application principale Nancy Spot
  * Point d'entrée de l'application, coordonne tous les gestionnaires avec Handlebars
  * @module app
  */
 class NancyApp {
     /**
-     * Crée une instance de l'application Nancy Interactive
+     * Crée une instance de l'application Nancy Spot
      * @constructor
      */
     constructor() {
@@ -54,7 +54,7 @@ class NancyApp {
      * @async
      */
     async init() {
-        console.log('Initialisation Nancy Interactive...');
+        console.log('Initialisation Nancy Spot...');
 
         // Initialisation des templates Handlebars
         this.initTemplates();

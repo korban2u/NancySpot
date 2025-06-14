@@ -1,5 +1,5 @@
 /**
- * Configuration globale de l'application Nancy Interactive
+ * Configuration globale de l'application Nancy Spot
  * Contient les URLs d'API, paramètres de carte et configuration des marqueurs
  * @module config/constants
  * @constant {Object} NANCY_CONFIG
