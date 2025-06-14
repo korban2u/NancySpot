@@ -32,6 +32,17 @@ CENTRAL_RMI_PORT ?= 1098
 CENTRAL_HOST ?= localhost
 CENTRAL_HTTPS_ENABLED ?= false
 
+# URL dynamique selon le protocole
+ifeq ($(CENTRAL_HTTPS_ENABLED),true)
+    API_URL = https://$(CENTRAL_HOST):$(CENTRAL_HTTPS_PORT)
+    PROTOCOL = HTTPS
+    PORT = $(CENTRAL_HTTPS_PORT)
+else
+    API_URL = http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)
+    PROTOCOL = HTTP
+    PORT = $(CENTRAL_HTTP_PORT)
+endif
+
 # Webetu
 WEBETU_USER ?= korban2u
 WEBETU_HOST = webetu.iutnc.univ-lorraine.fr
@@ -104,10 +115,10 @@ build-proxy: ## Compiler le service proxy
 build-frontend: ## Compiler le frontend
 	@echo "$(GREEN)=== Compilation Frontend ===$(NC)"
 	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
-		echo "$(YELLOW)Mode HTTPS détecté - URL: https://$(CENTRAL_HOST):$(CENTRAL_HTTPS_PORT)$(NC)"; \
+		echo "$(YELLOW)Mode HTTPS détecté - URL: $(API_URL)$(NC)"; \
 		cd frontend && mvn clean package -Pprod -Dcentral.host=$(CENTRAL_HOST) -Dcentral.https.port=$(CENTRAL_HTTPS_PORT) -DskipTests; \
 	else \
-		echo "$(YELLOW)Mode HTTP détecté - URL: http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)$(NC)"; \
+		echo "$(YELLOW)Mode HTTP détecté - URL: $(API_URL)$(NC)"; \
 		cd frontend && mvn clean package -Pprod-http -Dcentral.host=$(CENTRAL_HOST) -Dcentral.http.port=$(CENTRAL_HTTP_PORT) -DskipTests; \
 	fi
 	@echo "$(GREEN)✓ Frontend compilé$(NC)"
@@ -139,7 +150,7 @@ generate-config-proxy:
 
 deploy: build start ## Déploiement complet des services backend
 	@echo "$(GREEN)✓ Services backend déployés$(NC)"
-	@echo "$(BLUE)API: http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)$(NC)"
+	@echo "$(BLUE)API: $(API_URL)$(NC)"
 	@echo "$(YELLOW)Pour le frontend: make deploy-frontend$(NC)"
 
 start: start-central start-bd start-proxy ## Démarrer tous les services
@@ -244,27 +255,36 @@ status: ## Statut des services
 		fi; \
 	done
 	@echo ""
-	@echo "$(BLUE)API: http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)$(NC)"
+	@echo "$(BLUE)API: $(API_URL)$(NC)"
+	@echo "$(BLUE)Protocole: $(PROTOCOL) sur port $(PORT)$(NC)"
 
 health: ## Test de santé des APIs
 	@echo "$(YELLOW)Test de santé...$(NC)"
-	@API_URL="http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)"; \
-	for endpoint in services/etat restaurants velib incidents; do \
+	@echo "$(BLUE)=== Services Backend ===$(NC)"; \
+	for endpoint in services/etat restaurants incidents; do \
 		printf "%-15s " "$$endpoint:"; \
-		if curl -s --connect-timeout 3 "$$API_URL/$$endpoint" >/dev/null 2>&1; then \
+		if curl -s --connect-timeout 3 "$(API_URL)/$$endpoint" >/dev/null 2>&1; then \
 			echo "$(GREEN)✓$(NC)"; \
 		else \
 			echo "$(RED)✗$(NC)"; \
 		fi; \
-	done
+	done; \
+	echo ""; \
+	echo "$(BLUE)=== APIs Externes ===$(NC)"; \
+	printf "%-15s " "velib:"; \
+	if curl -s --connect-timeout 5 "https://api.cyclocity.fr/contracts/nancy/gbfs/gbfs.json" >/dev/null 2>&1; then \
+		echo "$(GREEN)✓$(NC)"; \
+	else \
+		echo "$(RED)✗$(NC)"; \
+	fi
 
 deploy-frontend: ## Déployer le frontend sur webetu
 	@echo "$(GREEN)=== Compilation Frontend pour production ===$(NC)"
 	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
-		echo "$(YELLOW)Mode HTTPS détecté - URL: https://$(CENTRAL_HOST):$(CENTRAL_HTTPS_PORT)$(NC)"; \
+		echo "$(YELLOW)Mode HTTPS détecté - URL: $(API_URL)$(NC)"; \
 		cd frontend && mvn clean package -Pprod -Dcentral.host=$(CENTRAL_HOST) -Dcentral.https.port=$(CENTRAL_HTTPS_PORT) -DskipTests; \
 	else \
-		echo "$(YELLOW)Mode HTTP détecté - URL: http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)$(NC)"; \
+		echo "$(YELLOW)Mode HTTP détecté - URL: $(API_URL)$(NC)"; \
 		cd frontend && mvn clean package -Pprod-http -Dcentral.host=$(CENTRAL_HOST) -Dcentral.http.port=$(CENTRAL_HTTP_PORT) -DskipTests; \
 	fi
 	@echo "$(GREEN)=== Déploiement Frontend sur Webetu ===$(NC)"
