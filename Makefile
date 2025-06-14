@@ -1,130 +1,114 @@
-# Makefile avec support des profils Maven pour Nancy Spot
-.PHONY: help build start stop restart clean logs status
+.PHONY: help build start stop restart deploy clean
+.PHONY: build-central build-bd build-proxy build-frontend
 .PHONY: start-central stop-central start-bd stop-bd start-proxy stop-proxy
-.PHONY: logs-central logs-bd logs-proxy generate-cert
-.PHONY: build-dev build-prod build-iut build-docker
-.PHONY: deploy-webetu deploy-webetu-iut deploy-webetu-clean clean-webetu test-webetu logs-webetu
+.PHONY: logs logs-central logs-bd logs-proxy status health
+.PHONY: deploy-frontend
 
-# Variables
+MAKEFLAGS += --no-print-directory
+
+# Couleurs
+GREEN=\033[0;32m
+YELLOW=\033[1;33m
+RED=\033[0;31m
+BLUE=\033[0;34m
+NC=\033[0m
+
+# Variables d'environnement
 ifneq (,$(wildcard ./.env))
     include .env
     export
 endif
 
-# Configuration par défaut
-CENTRAL_HOST ?= localhost
-CENTRAL_HTTP_PORT ?= 8080
-CENTRAL_HTTPS_PORT ?= 8443
-CENTRAL_HTTPS_ENABLED ?= false
-CENTRAL_RMI_PORT ?= 1098
-CENTRAL_KEYSTORE_PATH ?= nancy-keystore.jks
-SSL_KEYSTORE_PASSWORD ?= nancy2024
-
-# Profil Maven par défaut
-MAVEN_PROFILE ?= dev
-
+# Configuration
 BUILD_DIR = build
 LOGS_DIR = $(BUILD_DIR)/logs
 PIDS_DIR = $(BUILD_DIR)/pids
 CONFIG_DIR = $(BUILD_DIR)/config
 
-# Déploiement sur webetu
-WEBETU_USER ?= $(if $(strip $(WEBETU_USER)),$(WEBETU_USER),$(USER))
+# Ports par défaut
+CENTRAL_HTTP_PORT ?= 8080
+CENTRAL_HTTPS_PORT ?= 8443
+CENTRAL_RMI_PORT ?= 1098
+CENTRAL_HOST ?= localhost
+CENTRAL_HTTPS_ENABLED ?= false
+
+# Webetu
+WEBETU_USER ?= korban2u
 WEBETU_HOST = webetu.iutnc.univ-lorraine.fr
-WEBETU_PATH = www/NancySpot
-FRONTEND_BUILD_DIR = frontend/target/nancy-frontend
+WEBETU_PROJECT_DIR = NancySpot
+
+# JARs
+CENTRAL_JAR = service-central/target/service-central-1.0-SNAPSHOT.jar
+BD_JAR = service-bd/target/service-bd-1.0-SNAPSHOT.jar
+PROXY_JAR = service-proxy/target/service-proxy-1.0-SNAPSHOT.jar
+COMMON_JAR = common/target/common-1.0-SNAPSHOT.jar
 
 help: ## Afficher l'aide
-	@echo "Commandes disponibles :"
+	@echo "$(GREEN)=== Nancy Spot - Commandes ===$(NC)"
 	@echo ""
-	@echo "Build avec profils Maven :"
-	@echo "  build-dev      - Build pour développement local (http://localhost:8080)"
-	@echo "  build-prod     - Build pour production (variables d'environnement)"
-	@echo "  build-iut      - Build pour machines IUT (https://172.22.152.208:8443)"
-	@echo "  build-docker   - Build pour Docker (https://service-central:8443)"
-	@echo "  build          - Build avec profil par défaut ($(MAVEN_PROFILE))"
+	@echo "$(YELLOW)Compilation:$(NC)"
+	@echo "  $(GREEN)build$(NC)            Compiler tout"
+	@echo "  $(GREEN)build-central$(NC)    Compiler service-central uniquement"
+	@echo "  $(GREEN)build-bd$(NC)         Compiler service-bd uniquement"
+	@echo "  $(GREEN)build-proxy$(NC)      Compiler service-proxy uniquement"
+	@echo "  $(GREEN)build-frontend$(NC)   Compiler frontend uniquement"
 	@echo ""
-	@echo "Services :"
-	@echo "  start          - Démarrer tous les services"
-	@echo "  stop           - Arrêter tous les services"
-	@echo "  restart        - Redémarrer tous les services"
-	@echo "  status         - Voir le statut des services"
-	@echo "  logs           - Voir les logs récents"
-	@echo "  clean          - Nettoyer"
-	@echo "  generate-cert  - Générer certificat HTTPS"
+	@echo "$(YELLOW)Principales:$(NC)"
+	@echo "  $(GREEN)deploy$(NC)           Compiler + démarrer services"
+	@echo "  $(GREEN)start$(NC)            Démarrer les services backend"
+	@echo "  $(GREEN)stop$(NC)             Arrêter les services"
+	@echo "  $(GREEN)status$(NC)           Statut des services"
+	@echo "  $(GREEN)logs$(NC)             Voir les logs"
+	@echo "  $(GREEN)health$(NC)           Test de santé"
+	@echo "  $(GREEN)clean$(NC)            Nettoyer tout"
 	@echo ""
-	@echo "Déploiement webetu :"
-	@echo "  deploy-webetu         - Déployer frontend sur webetu"
-	@echo "  deploy-webetu-iut     - Build IUT + déployer sur webetu"
-	@echo "  deploy-webetu-clean   - Nettoyer + déployer sur webetu"
-	@echo "  clean-webetu          - Nettoyer le frontend sur webetu"
-	@echo "  test-webetu           - Tester le frontend déployé"
-	@echo "  logs-webetu           - Voir les fichiers sur webetu"
+	@echo "$(YELLOW)Frontend:$(NC)"
+	@echo "  $(GREEN)deploy-frontend$(NC)  Déployer sur webetu"
 	@echo ""
-	@echo "Services individuels :"
-	@echo "  start-central  - Démarrer service central"
-	@echo "  start-bd       - Démarrer service BD"
-	@echo "  start-proxy    - Démarrer service proxy"
-	@echo ""
-	@echo "Logs individuels :"
-	@echo "  logs-central   - Suivre logs service central"
-	@echo "  logs-bd        - Suivre logs service BD"
-	@echo "  logs-proxy     - Suivre logs service proxy"
-	@echo ""
-	@echo "Variables d'environnement :"
-	@echo "  MAVEN_PROFILE=$(MAVEN_PROFILE)"
-	@echo "  CENTRAL_HOST=$(CENTRAL_HOST)"
-	@echo "  CENTRAL_HTTPS_ENABLED=$(CENTRAL_HTTPS_ENABLED)"
-	@echo "  WEBETU_USER=$(WEBETU_USER) (configuré dans .env)"
+	@echo "$(YELLOW)Services individuels:$(NC)"
+	@echo "  $(GREEN)start-central$(NC), $(GREEN)stop-central$(NC), $(GREEN)logs-central$(NC)"
+	@echo "  $(GREEN)start-bd$(NC), $(GREEN)stop-bd$(NC), $(GREEN)logs-bd$(NC)"
+	@echo "  $(GREEN)start-proxy$(NC), $(GREEN)stop-proxy$(NC), $(GREEN)logs-proxy$(NC)"
 
-# Builds spécialisés avec profils Maven
-build-dev: ## Build pour développement local
-	@echo "Build pour développement local (HTTP)..."
-	@mvn clean package -Pdev -DskipTests
-	@$(MAKE) -s post-build
-	@echo "✓ Build dev terminé - Frontend configuré pour http://localhost:8080"
-
-build-dev-https: ## Build pour développement local avec HTTPS
-	@echo "Build pour développement local (HTTPS)..."
-	@mvn clean package -Pdev-https -DskipTests
-	@$(MAKE) -s post-build
-	@echo "✓ Build dev-https terminé - Frontend configuré pour https://localhost:8443"
-
-build-prod: ## Build pour production
-	@echo "Build pour production..."
-	@if [ -z "$(CENTRAL_HOST)" ]; then \
-		echo "ERREUR: Variable CENTRAL_HOST non définie"; \
-		exit 1; \
-	fi
-	@mvn clean package -Pprod -DskipTests
-	@$(MAKE) -s post-build
-	@echo "✓ Build prod terminé - Frontend configuré pour $(CENTRAL_HOST)"
-
-build-iut: ## Build pour machines IUT
-	@echo "Build pour machines IUT..."
-	@mvn clean package -Piut -DskipTests
-	@$(MAKE) -s post-build
-	@echo "✓ Build IUT terminé - Frontend configuré pour https://172.22.152.208:8443"
-
-build-docker: ## Build pour Docker
-	@echo "Build pour Docker..."
-	@mvn clean package -Pdocker -DskipTests
-	@$(MAKE) -s post-build
-	@echo "✓ Build Docker terminé - Frontend configuré pour https://service-central:8443"
-
-build: ## Build avec profil par défaut
-	@echo "Build avec profil $(MAVEN_PROFILE)..."
-	@mvn clean package -P$(MAVEN_PROFILE) -DskipTests
-	@$(MAKE) -s post-build
-	@echo "✓ Build terminé avec profil $(MAVEN_PROFILE)"
-
-post-build:
+build: ## Compiler tous les modules
+	@echo "$(GREEN)=== Compilation complète ===$(NC)"
+	@mvn clean package dependency:copy-dependencies -DskipTests
 	@mkdir -p $(BUILD_DIR) $(LOGS_DIR) $(PIDS_DIR) $(CONFIG_DIR)
 	@$(MAKE) -s generate-configs
-	@echo "Configuration des services générée"
+	@echo "$(GREEN)✓ Compilation terminée$(NC)"
 
-generate-configs:
-	@# Config Central
+build-central: ## Compiler le service central
+	@echo "$(GREEN)=== Compilation service-central ===$(NC)"
+	@cd common && mvn clean package -DskipTests
+	@cd service-central && mvn clean package dependency:copy-dependencies -DskipTests
+	@mkdir -p $(BUILD_DIR) $(LOGS_DIR) $(PIDS_DIR) $(CONFIG_DIR)
+	@$(MAKE) -s generate-config-central
+	@echo "$(GREEN)✓ Service Central compilé$(NC)"
+
+build-bd: ## Compiler le service BD
+	@echo "$(GREEN)=== Compilation service-bd ===$(NC)"
+	@cd common && mvn clean package -DskipTests
+	@cd service-bd && mvn clean package dependency:copy-dependencies -DskipTests
+	@mkdir -p $(BUILD_DIR) $(LOGS_DIR) $(PIDS_DIR) $(CONFIG_DIR)
+	@$(MAKE) -s generate-config-bd
+	@echo "$(GREEN)✓ Service BD compilé$(NC)"
+
+build-proxy: ## Compiler le service proxy
+	@echo "$(GREEN)=== Compilation service-proxy ===$(NC)"
+	@cd common && mvn clean package -DskipTests
+	@cd service-proxy && mvn clean package dependency:copy-dependencies -DskipTests
+	@mkdir -p $(BUILD_DIR) $(LOGS_DIR) $(PIDS_DIR) $(CONFIG_DIR)
+	@$(MAKE) -s generate-config-proxy
+	@echo "$(GREEN)✓ Service Proxy compilé$(NC)"
+
+build-frontend: ## Compiler le frontend
+	@echo "$(GREEN)=== Compilation Frontend ===$(NC)"
+	@cd frontend && mvn clean package -DskipTests
+	@echo "$(GREEN)✓ Frontend compilé$(NC)"
+
+generate-configs: generate-config-central generate-config-bd generate-config-proxy
+
+generate-config-central:
 	@echo "central.rmi.port=$(CENTRAL_RMI_PORT)" > $(CONFIG_DIR)/central.properties
 	@echo "central.host=$(CENTRAL_HOST)" >> $(CONFIG_DIR)/central.properties
 	@echo "central.http.port=$(CENTRAL_HTTP_PORT)" >> $(CONFIG_DIR)/central.properties
@@ -132,258 +116,171 @@ generate-configs:
 	@echo "central.https.port=$(CENTRAL_HTTPS_PORT)" >> $(CONFIG_DIR)/central.properties
 	@echo "central.keystore.path=$(CENTRAL_KEYSTORE_PATH)" >> $(CONFIG_DIR)/central.properties
 	@echo "central.keystore.password=$(CENTRAL_KEYSTORE_PASSWORD)" >> $(CONFIG_DIR)/central.properties
-	@echo "ssl.keystore.password=$(SSL_KEYSTORE_PASSWORD)" >> $(CONFIG_DIR)/central.properties
 
-	@# Config BD
+generate-config-bd:
 	@echo "bd.jdbc.url=$(BD_JDBC_URL)" > $(CONFIG_DIR)/bd.properties
 	@echo "bd.jdbc.user=$(BD_JDBC_USER)" >> $(CONFIG_DIR)/bd.properties
 	@echo "bd.jdbc.password=$(BD_JDBC_PASSWORD)" >> $(CONFIG_DIR)/bd.properties
-	@echo "bd.rmi.name=$(BD_RMI_NAME)" >> $(CONFIG_DIR)/bd.properties
-	@echo "bd.rmi.port=$(BD_RMI_PORT)" >> $(CONFIG_DIR)/bd.properties
 	@echo "central.host=$(CENTRAL_HOST)" >> $(CONFIG_DIR)/bd.properties
 	@echo "central.rmi.port=$(CENTRAL_RMI_PORT)" >> $(CONFIG_DIR)/bd.properties
 
-	@# Config Proxy
+generate-config-proxy:
 	@echo "proxy.use.iut.proxy=$(PROXY_USE_IUT_PROXY)" > $(CONFIG_DIR)/proxy.properties
 	@echo "proxy.iut.host=$(PROXY_IUT_HOST)" >> $(CONFIG_DIR)/proxy.properties
 	@echo "proxy.iut.port=$(PROXY_IUT_PORT)" >> $(CONFIG_DIR)/proxy.properties
 	@echo "central.host=$(CENTRAL_HOST)" >> $(CONFIG_DIR)/proxy.properties
 	@echo "central.rmi.port=$(CENTRAL_RMI_PORT)" >> $(CONFIG_DIR)/proxy.properties
 
-start: ## Démarrer tous les services
-	@echo "Démarrage des services..."
-	@$(MAKE) -s start-service SERVICE=central JAR=service-central/target/service-central-1.0-SNAPSHOT.jar
-	@sleep 3
-	@$(MAKE) -s start-service SERVICE=bd JAR=service-bd/target/service-bd-1.0-SNAPSHOT.jar
-	@$(MAKE) -s start-service SERVICE=proxy JAR=service-proxy/target/service-proxy-1.0-SNAPSHOT.jar
-	@echo "✓ Services démarrés"
-	@$(MAKE) -s show-frontend-url
+deploy: build start ## Déploiement complet des services backend
+	@echo "$(GREEN)✓ Services backend déployés$(NC)"
+	@echo "$(BLUE)API: http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)$(NC)"
+	@echo "$(YELLOW)Pour le frontend: make deploy-frontend$(NC)"
 
-show-frontend-url:
-	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
-		echo "Frontend accessible: https://$(CENTRAL_HOST):$(CENTRAL_HTTPS_PORT)"; \
-		echo "⚠️  Accepter le certificat auto-signé dans le navigateur"; \
-	else \
-		echo "Frontend accessible: http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)"; \
-	fi
+start: start-central start-bd start-proxy ## Démarrer tous les services
+	@echo "$(GREEN)✓ Tous les services démarrés$(NC)"
 
-start-service:
-	@if [ -f $(PIDS_DIR)/$(SERVICE).pid ] && kill -0 $$(cat $(PIDS_DIR)/$(SERVICE).pid) 2>/dev/null; then \
-		echo "$(SERVICE) déjà démarré"; \
-	else \
-		nohup java -Xmx512m -Djava.rmi.server.hostname=$(CENTRAL_HOST) \
-			-cp "$(JAR):$(SERVICE)/target/dependency/*:common/target/common-1.0-SNAPSHOT.jar" \
-			Main $(CONFIG_DIR)/$(SERVICE).properties \
-			> $(LOGS_DIR)/$(SERVICE).log 2>&1 & \
-		echo $$! > $(PIDS_DIR)/$(SERVICE).pid; \
-		echo "✓ $(SERVICE) démarré"; \
-	fi
-
-stop: ## Arrêter tous les services
-	@echo "Arrêt des services..."
-	@for service in proxy bd central; do \
-		if [ -f $(PIDS_DIR)/$$service.pid ]; then \
-			PID=$$(cat $(PIDS_DIR)/$$service.pid 2>/dev/null || echo ""); \
-			if [ -n "$$PID" ]; then \
-				kill $$PID 2>/dev/null || true; \
-				sleep 1; \
-			fi; \
-			rm -f $(PIDS_DIR)/$$service.pid; \
-			echo "✓ $$service arrêté"; \
-		fi; \
-	done
-
-restart: stop start ## Redémarrer tous les services
+stop: stop-proxy stop-bd stop-central ## Arrêter tous les services
+	@echo "$(GREEN)✓ Tous les services arrêtés$(NC)"
 
 # Services individuels
-start-central: ## Démarrer le service central
-	@$(MAKE) -s start-service SERVICE=central JAR=service-central/target/service-central-1.0-SNAPSHOT.jar
+start-central: ## Démarrer service central
+	@if [ -f $(PIDS_DIR)/central.pid ] && kill -0 $$(cat $(PIDS_DIR)/central.pid) 2>/dev/null; then \
+		echo "$(YELLOW)Service Central déjà démarré$(NC)"; exit 0; \
+	fi
+	@echo "$(YELLOW)Démarrage Service Central...$(NC)"
+	@nohup java -Xmx1g -Djava.rmi.server.hostname=$(CENTRAL_HOST) \
+		-cp "$(CENTRAL_JAR):service-central/target/dependency/*:$(COMMON_JAR)" \
+		Main $(CONFIG_DIR)/central.properties > $(LOGS_DIR)/central.log 2>&1 & \
+	echo $$! > $(PIDS_DIR)/central.pid
+	@sleep 2
+	@echo "$(GREEN)✓ Service Central démarré$(NC)"
 
-stop-central: ## Arrêter le service central
-	@$(MAKE) -s stop-service SERVICE=central
-
-start-bd: ## Démarrer le service BD
-	@$(MAKE) -s start-service SERVICE=bd JAR=service-bd/target/service-bd-1.0-SNAPSHOT.jar
-
-stop-bd: ## Arrêter le service BD
-	@$(MAKE) -s stop-service SERVICE=bd
-
-start-proxy: ## Démarrer le service proxy
-	@$(MAKE) -s start-service SERVICE=proxy JAR=service-proxy/target/service-proxy-1.0-SNAPSHOT.jar
-
-stop-proxy: ## Arrêter le service proxy
-	@$(MAKE) -s stop-service SERVICE=proxy
-
-stop-service:
-	@if [ -f $(PIDS_DIR)/$(SERVICE).pid ]; then \
-		PID=$$(cat $(PIDS_DIR)/$(SERVICE).pid 2>/dev/null || echo ""); \
-		if [ -n "$$PID" ]; then \
-			kill $$PID 2>/dev/null || true; \
-			sleep 1; \
-			echo "✓ $(SERVICE) arrêté"; \
-		fi; \
-		rm -f $(PIDS_DIR)/$(SERVICE).pid; \
-	else \
-		echo "$(SERVICE) non démarré"; \
+stop-central: ## Arrêter service central
+	@if [ -f $(PIDS_DIR)/central.pid ]; then \
+		kill $$(cat $(PIDS_DIR)/central.pid) 2>/dev/null || true; \
+		rm -f $(PIDS_DIR)/central.pid; \
+		echo "$(GREEN)✓ Service Central arrêté$(NC)"; \
 	fi
 
-status: ## Statut des services
-	@echo "Statut des services:"
-	@for service in central bd proxy; do \
-		if [ -f $(PIDS_DIR)/$$service.pid ]; then \
-			PID=$$(cat $(PIDS_DIR)/$$service.pid 2>/dev/null || echo ""); \
-			if [ -n "$$PID" ] && kill -0 $$PID 2>/dev/null; then \
-				echo "  $$service: ACTIF (PID: $$PID)"; \
-			else \
-				echo "  $$service: CRASHÉ"; \
-			fi; \
-		else \
-			echo "  $$service: ARRÊTÉ"; \
-		fi; \
-	done
+start-bd: ## Démarrer service BD
+	@if [ -f $(PIDS_DIR)/bd.pid ] && kill -0 $$(cat $(PIDS_DIR)/bd.pid) 2>/dev/null; then \
+		echo "$(YELLOW)Service BD déjà démarré$(NC)"; exit 0; \
+	fi
+	@echo "$(YELLOW)Démarrage Service BD...$(NC)"
+	@nohup java -Xmx512m -Djava.rmi.server.hostname=$(CENTRAL_HOST) \
+		-cp "$(BD_JAR):service-bd/target/dependency/*:$(COMMON_JAR)" \
+		Main $(CONFIG_DIR)/bd.properties > $(LOGS_DIR)/bd.log 2>&1 & \
+	echo $$! > $(PIDS_DIR)/bd.pid
+	@sleep 1
+	@echo "$(GREEN)✓ Service BD démarré$(NC)"
 
-logs: ## Voir les logs récents
-	@echo "=== Logs récents ==="
+stop-bd: ## Arrêter service BD
+	@if [ -f $(PIDS_DIR)/bd.pid ]; then \
+		kill $$(cat $(PIDS_DIR)/bd.pid) 2>/dev/null || true; \
+		rm -f $(PIDS_DIR)/bd.pid; \
+		echo "$(GREEN)✓ Service BD arrêté$(NC)"; \
+	fi
+
+start-proxy: ## Démarrer service proxy
+	@if [ -f $(PIDS_DIR)/proxy.pid ] && kill -0 $$(cat $(PIDS_DIR)/proxy.pid) 2>/dev/null; then \
+		echo "$(YELLOW)Service Proxy déjà démarré$(NC)"; exit 0; \
+	fi
+	@echo "$(YELLOW)Démarrage Service Proxy...$(NC)"
+	@nohup java -Xmx512m -Djava.rmi.server.hostname=$(CENTRAL_HOST) \
+		-cp "$(PROXY_JAR):service-proxy/target/dependency/*:$(COMMON_JAR)" \
+		Main $(CONFIG_DIR)/proxy.properties > $(LOGS_DIR)/proxy.log 2>&1 & \
+	echo $$! > $(PIDS_DIR)/proxy.pid
+	@sleep 1
+	@echo "$(GREEN)✓ Service Proxy démarré$(NC)"
+
+stop-proxy: ## Arrêter service proxy
+	@if [ -f $(PIDS_DIR)/proxy.pid ]; then \
+		kill $$(cat $(PIDS_DIR)/proxy.pid) 2>/dev/null || true; \
+		rm -f $(PIDS_DIR)/proxy.pid; \
+		echo "$(GREEN)✓ Service Proxy arrêté$(NC)"; \
+	fi
+
+# Logs
+logs: ## Voir tous les logs (dernières lignes)
+	@echo "$(GREEN)=== Logs récents ===$(NC)"
 	@for service in central bd proxy; do \
 		if [ -f $(LOGS_DIR)/$$service.log ]; then \
-			echo "--- $$service ---"; \
-			tail -5 $(LOGS_DIR)/$$service.log; \
+			echo "$(BLUE)--- $$service ---$(NC)"; \
+			tail -3 $(LOGS_DIR)/$$service.log; \
 			echo ""; \
 		fi; \
 	done
 
-logs-central: ## Suivre les logs du service central
-	@tail -f $(LOGS_DIR)/central.log 2>/dev/null || echo "Service central non démarré"
+logs-central: ## Suivre logs central en temps réel
+	@tail -f $(LOGS_DIR)/central.log 2>/dev/null || echo "$(RED)Logs central non trouvés$(NC)"
 
-logs-bd: ## Suivre les logs du service BD
-	@tail -f $(LOGS_DIR)/bd.log 2>/dev/null || echo "Service BD non démarré"
+logs-bd: ## Suivre logs BD en temps réel
+	@tail -f $(LOGS_DIR)/bd.log 2>/dev/null || echo "$(RED)Logs BD non trouvés$(NC)"
 
-logs-proxy: ## Suivre les logs du service proxy
-	@tail -f $(LOGS_DIR)/proxy.log 2>/dev/null || echo "Service proxy non démarré"
+logs-proxy: ## Suivre logs proxy en temps réel
+	@tail -f $(LOGS_DIR)/proxy.log 2>/dev/null || echo "$(RED)Logs proxy non trouvés$(NC)"
 
-clean: stop ## Nettoyer
-	@echo "Nettoyage..."
+# Statut et santé
+status: ## Statut des services
+	@echo "$(GREEN)=== Statut des services ===$(NC)"
+	@printf "%-10s %-8s %-6s\n" "SERVICE" "STATUT" "PID"
+	@printf "%-10s %-8s %-6s\n" "-------" "------" "---"
+	@for service in central bd proxy; do \
+		if [ -f $(PIDS_DIR)/$$service.pid ]; then \
+			PID=$$(cat $(PIDS_DIR)/$$service.pid 2>/dev/null || echo ""); \
+			if [ -n "$$PID" ] && kill -0 $$PID 2>/dev/null; then \
+				printf "%-10s $(GREEN)%-8s$(NC) %-6s\n" "$$service" "ACTIF" "$$PID"; \
+			else \
+				printf "%-10s $(RED)%-8s$(NC) %-6s\n" "$$service" "MORT" "$$PID"; \
+			fi; \
+		else \
+			printf "%-10s $(RED)%-8s$(NC) %-6s\n" "$$service" "ARRÊTÉ" "-"; \
+		fi; \
+	done
+	@echo ""
+	@echo "$(BLUE)API: http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)$(NC)"
+
+health: ## Test de santé des APIs
+	@echo "$(YELLOW)Test de santé...$(NC)"
+	@API_URL="http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)"; \
+	for endpoint in services/etat restaurants velib incidents; do \
+		printf "%-15s " "$$endpoint:"; \
+		if curl -s --connect-timeout 3 "$$API_URL/$$endpoint" >/dev/null 2>&1; then \
+			echo "$(GREEN)✓$(NC)"; \
+		else \
+			echo "$(RED)✗$(NC)"; \
+		fi; \
+	done
+
+deploy-frontend: build-frontend ## Déployer le frontend sur webetu
+	@echo "$(GREEN)=== Déploiement Frontend sur Webetu ===$(NC)"
+	@if [ -z "$(WEBETU_USER)" ]; then \
+		echo "$(RED)Erreur: WEBETU_USER non défini dans .env$(NC)"; \
+		exit 1; \
+	fi
+
+	@echo "$(YELLOW)Création archive...$(NC)"
+	@cd frontend/target && \
+	tar --exclude="*.class" --exclude="*/WEB-INF/classes/*" \
+		-czf nancy-frontend.tar.gz nancy-frontend/
+
+	@echo "$(YELLOW)Upload sur webetu...$(NC)"
+	@scp frontend/target/nancy-frontend.tar.gz $(WEBETU_USER)@$(WEBETU_HOST):
+
+	@echo "$(YELLOW)Déploiement...$(NC)"
+	@ssh $(WEBETU_USER)@$(WEBETU_HOST) '\
+		rm -rf www/$(WEBETU_PROJECT_DIR) 2>/dev/null || true; \
+		mkdir -p www; \
+		cd www; \
+		tar -xzf ~/nancy-frontend.tar.gz; \
+		mv nancy-frontend $(WEBETU_PROJECT_DIR); \
+		rm ~/nancy-frontend.tar.gz'
+
+	@echo "$(GREEN)✓ Frontend déployé$(NC)"
+	@echo "$(BLUE)URL: https://webetu.iutnc.univ-lorraine.fr/~$(WEBETU_USER)/$(WEBETU_PROJECT_DIR)/$(NC)"
+
+clean: stop ## Nettoyer tout
+	@echo "$(YELLOW)Nettoyage...$(NC)"
 	@rm -rf $(BUILD_DIR)
 	@mvn clean -q
-	@echo "✓ Nettoyage terminé"
-
-# Commandes rapides pour différents environnements
-deploy-dev: build-dev start  ## Build dev + Start
-deploy-prod: build-prod start  ## Build prod + Start
-deploy-iut: build-iut start  ## Build IUT + Start
-deploy-docker: build-docker start  ## Build Docker + Start
-
-test-api: ## Test de l'API
-	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
-		curl -s -k "https://$(CENTRAL_HOST):$(CENTRAL_HTTPS_PORT)/services/etat" > /dev/null && echo "API OK" || echo "API KO"; \
-	else \
-		curl -s "http://$(CENTRAL_HOST):$(CENTRAL_HTTP_PORT)/services/etat" > /dev/null && echo "API OK" || echo "API KO"; \
-	fi
-
-generate-cert: ## Générer le certificat HTTPS
-	@if [ -f $(CENTRAL_KEYSTORE_PATH) ]; then \
-		echo "⚠️  Le certificat existe déjà ($(CENTRAL_KEYSTORE_PATH))"; \
-		echo "Supprimez-le si vous voulez le régénérer"; \
-	else \
-		echo "Génération du certificat HTTPS..."; \
-		keytool -genkeypair -alias nancy -keyalg RSA -keysize 2048 \
-			-storetype PKCS12 -keystore $(CENTRAL_KEYSTORE_PATH) \
-			-storepass $(SSL_KEYSTORE_PASSWORD) -keypass $(SSL_KEYSTORE_PASSWORD) \
-			-dname "CN=$(CENTRAL_HOST), OU=SAE, O=Nancy, L=Nancy, ST=Lorraine, C=FR" \
-			-validity 365 -ext SAN=dns:localhost,dns:$(CENTRAL_HOST),ip:127.0.0.1; \
-		echo "✓ Certificat généré : $(CENTRAL_KEYSTORE_PATH)"; \
-		echo "  Mot de passe keystore : $(SSL_KEYSTORE_PASSWORD)"; \
-	fi
-
-# Vérifier la configuration du frontend après build
-check-frontend-config: ## Vérifier la configuration du frontend
-	@echo "Configuration frontend actuelle :"
-	@if [ -f frontend/target/nancy-frontend/js/config/constants.js ]; then \
-		grep "API_BASE_URL" frontend/target/nancy-frontend/js/config/constants.js; \
-	else \
-		echo "⚠️  Fichier de configuration frontend non trouvé - Lancez 'make build' d'abord"; \
-	fi
-
-deploy-webetu: ## Déployer le frontend sur webetu
-	@echo "Déploiement du frontend sur webetu..."
-	@$(MAKE) -s check-webetu-config
-	@$(MAKE) -s prepare-frontend-archive
-	@$(MAKE) -s upload-frontend
-	@$(MAKE) -s extract-frontend-webetu
-	@echo "✓ Frontend déployé sur https://webetu.iutnc.univ-lorraine.fr/~$(WEBETU_USER)/NancySpot/"
-
-deploy-webetu-iut: build-iut deploy-webetu ## Build IUT + déployer sur webetu
-
-check-webetu-config:
-	@if [ -z "$(WEBETU_USER)" ] || [ "$(WEBETU_USER)" = "votre_login_webetu" ]; then \
-		echo "ERREUR: Variable WEBETU_USER non configurée"; \
-		echo "Configurez votre login dans le fichier .env :"; \
-		echo "  WEBETU_USER=votre_login"; \
-		echo "Ou utilisez: make deploy-webetu WEBETU_USER=votre_login"; \
-		exit 1; \
-	fi
-	@if [ ! -d "$(FRONTEND_BUILD_DIR)" ]; then \
-		echo "ERREUR: Frontend non compilé"; \
-		echo "Lancez d'abord: make build-iut"; \
-		exit 1; \
-	fi
-	@echo "Configuration webetu :"
-	@echo "  Utilisateur: $(WEBETU_USER)"
-	@echo "  Répertoire: ~/$(WEBETU_PATH)"
-	@echo "  Frontend: $(FRONTEND_BUILD_DIR)"
-
-prepare-frontend-archive:
-	@echo "Préparation de l'archive frontend..."
-	@rm -f $(BUILD_DIR)/nancy-frontend.tar.gz
-	@mkdir -p $(BUILD_DIR)
-	@cd $(FRONTEND_BUILD_DIR) && tar -czf ../../../$(BUILD_DIR)/nancy-frontend.tar.gz .
-	@echo "✓ Archive créée: $(BUILD_DIR)/nancy-frontend.tar.gz"
-
-upload-frontend:
-	@echo "Upload vers webetu ($(WEBETU_USER)@$(WEBETU_HOST))..."
-	@scp $(BUILD_DIR)/nancy-frontend.tar.gz $(WEBETU_USER)@$(WEBETU_HOST):
-	@echo "✓ Archive uploadée"
-
-extract-frontend-webetu:
-	@echo "Décompression sur webetu..."
-	@ssh $(WEBETU_USER)@$(WEBETU_HOST) '\
-		mkdir -p $(WEBETU_PATH) && \
-		cd $(WEBETU_PATH) && \
-		tar -xzf ~/nancy-frontend.tar.gz && \
-		rm ~/nancy-frontend.tar.gz && \
-		echo "Frontend décompressé dans ~/$(WEBETU_PATH)/"'
-	@echo "✓ Frontend déployé"
-
-clean-webetu: ## Nettoyer le frontend sur webetu
-	@echo "Nettoyage du frontend sur webetu..."
-	@if [ -z "$(WEBETU_USER)" ] || [ "$(WEBETU_USER)" = "votre_login_webetu" ]; then \
-		echo "ERREUR: Variable WEBETU_USER non configurée dans .env"; \
-		exit 1; \
-	fi
-	@ssh $(WEBETU_USER)@$(WEBETU_HOST) '\
-		if [ -d $(WEBETU_PATH) ]; then \
-			rm -rf $(WEBETU_PATH)/*; \
-			echo "Dossier NancySpot nettoyé"; \
-		else \
-			echo "Dossier $(WEBETU_PATH) inexistant"; \
-		fi'
-
-deploy-webetu-clean: clean-webetu deploy-webetu ## Nettoyer + déployer sur webetu
-
-# Test du frontend déployé
-test-webetu: ## Tester le frontend sur webetu
-	@if [ -z "$(WEBETU_USER)" ] || [ "$(WEBETU_USER)" = "votre_login_webetu" ]; then \
-		echo "ERREUR: Variable WEBETU_USER non configurée dans .env"; \
-		exit 1; \
-	fi
-	@echo "Test du frontend sur webetu..."
-	@curl -s -I "https://webetu.iutnc.univ-lorraine.fr/~$(WEBETU_USER)/NancySpot/" | head -1 || echo "Site non accessible"
-	@echo "URL: https://webetu.iutnc.univ-lorraine.fr/~$(WEBETU_USER)/NancySpot/"
-
-# Commande pour voir les logs de déploiement webetu
-logs-webetu: ## Voir les fichiers sur webetu
-	@if [ -z "$(WEBETU_USER)" ] || [ "$(WEBETU_USER)" = "votre_login_webetu" ]; then \
-		echo "ERREUR: Variable WEBETU_USER non configurée dans .env"; \
-		exit 1; \
-	fi
-	@ssh $(WEBETU_USER)@$(WEBETU_HOST) 'ls -la $(WEBETU_PATH)/'
+	@echo "$(GREEN)✓ Nettoyage terminé$(NC)"
