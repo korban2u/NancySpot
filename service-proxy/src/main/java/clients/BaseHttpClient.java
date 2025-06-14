@@ -33,12 +33,10 @@ public abstract class BaseHttpClient {
                 .build();
     }
 
-    // ✅ Méthode de compatibilité pour l'ancien constructeur
     public BaseHttpClient(boolean useProxy) {
         this(useProxy, null, null);
     }
 
-    // ✅ CORRECTION : Utiliser la configuration dynamique
     private void configureProxy() {
         System.setProperty("http.proxyHost", this.proxyHost);
         System.setProperty("http.proxyPort", this.proxyPort);
