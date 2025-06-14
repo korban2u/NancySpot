@@ -10,10 +10,6 @@ import java.rmi.RemoteException;
  *
  * Le service proxy gère automatiquement la configuration réseau
  * (proxy IUT si nécessaire) et fournit une interface pour les données externes.
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public interface ServiceProxy extends Remote {
 

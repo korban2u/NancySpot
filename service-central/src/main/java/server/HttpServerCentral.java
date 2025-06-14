@@ -32,10 +32,6 @@ import java.util.logging.Level;
  * - POST /reserver - Effectuer une réservation
  * - GET /incidents - Incidents de circulation
  * - GET /services/etat - État des services backend
- *
- * @author Nancy Spot Team
- * @version 2.0
- * @since 1.0
  */
 public class HttpServerCentral {
 

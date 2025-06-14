@@ -20,10 +20,6 @@ import java.io.IOException;
  *
  * Les créneaux permettent de définir des plages horaires pour les réservations
  * (exemple : "Déjeuner 12:00-14:30", "Dîner 19:00-22:00").
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 2.0
  */
 public class CreneauxHandler implements HttpHandler {
 

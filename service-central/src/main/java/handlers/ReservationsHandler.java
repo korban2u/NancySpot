@@ -23,10 +23,6 @@ import java.io.IOException;
  * - Le suivi des réservations par les clients
  * - La gestion des plannings par date
  * - L'annulation de réservations existantes
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 2.0
  */
 public class ReservationsHandler implements HttpHandler {
 

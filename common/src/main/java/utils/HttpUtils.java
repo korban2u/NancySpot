@@ -23,10 +23,6 @@ import java.util.logging.Level;
  * - Gestion centralisée des erreurs
  * - Lecture du corps des requêtes
  * - Validation des données JSON
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public class HttpUtils {
 

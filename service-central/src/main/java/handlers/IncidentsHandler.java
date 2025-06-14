@@ -26,10 +26,6 @@ import java.io.IOException;
  *
  * Les données sont filtrées pour ne retourner que les incidents
  * pertinents dans les envitons de Nancy.
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public class IncidentsHandler implements HttpHandler {
 

@@ -10,10 +10,6 @@ import java.rmi.RemoteException;
  *
  * Il maintient un registre des services disponibles et permet aux autres
  * services de s'enregistrer ou se désenregistrer dynamiquement.
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public interface ServiceCentral extends Remote {
 

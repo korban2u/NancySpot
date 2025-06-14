@@ -19,9 +19,6 @@ import java.util.logging.Level;
 
 /**
  * Implémentation du service BD avec support des créneaux horaires
- *
- * @author Nancy Spot Team
- * @version 2.0 - Avec gestion des créneaux
  */
 public class BaseDonnee implements ServiceBD {
 

@@ -16,11 +16,6 @@ import java.io.IOException;
  *
  * Endpoint géré :
  * - POST /reserver : Crée une nouvelle réservation
- *
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public class ReserverHandler implements HttpHandler {
 

@@ -21,10 +21,6 @@ import java.util.logging.Logger;
  * - Access-Control-Allow-Methods: GET, POST, OPTIONS
  * - Access-Control-Allow-Headers: Content-Type, Accept
  * - Access-Control-Max-Age: 3600 (cache preflight pendant 1 heure)
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public class CorsFilter extends Filter {
 

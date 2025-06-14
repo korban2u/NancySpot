@@ -6,10 +6,6 @@ import java.io.Serializable;
  * Représente un créneau horaire pour les réservations de restaurant.
  * Un créneau définit une plage horaire pendant laquelle les réservations sont possibles,
  * comme le déjeuner ou le dîner.
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public class Creneau implements Serializable {
     private static final long serialVersionUID = 1L;

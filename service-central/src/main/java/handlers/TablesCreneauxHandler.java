@@ -17,16 +17,6 @@ import java.io.IOException;
  * - GET /tables/libres/{restaurantId}/{date}/{creneauId} : Tables libres pour un créneau
  * - GET /tables/statut/{restaurantId}/{date}/{creneauId} : Statut de toutes les tables
  * - GET /tables/disponibilite/{tableId}/{date}/{creneauId} : Vérifier une table spécifique
- *
- * Ce handler permet :
- * - La consultation des disponibilités par créneau
- * - La vérification de statut en temps réel
- * - Le support des interfaces d'administration
- * - La compatibilité avec l'ancien système
- *
- * @author Nancy Spot Team
- * @version 2.0
- * @since 2.0
  */
 public class TablesCreneauxHandler implements HttpHandler {
 

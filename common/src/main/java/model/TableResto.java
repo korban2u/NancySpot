@@ -6,10 +6,6 @@ import java.io.Serializable;
  * Représente une table de restaurant dans le système de réservation.
  * Chaque table appartient à un restaurant spécifique et possède une capacité
  * et un statut de disponibilité.
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public class TableResto implements Serializable {
     private static final long serialVersionUID = 1L;

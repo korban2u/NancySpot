@@ -11,10 +11,6 @@ import utils.ConfigManager;
  * - Port HTTP pour les APIs REST
  * - Configuration HTTPS (activation, port, certificats)
  * - Chemins et mots de passe des keystores SSL
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public class CentralConfig {
 

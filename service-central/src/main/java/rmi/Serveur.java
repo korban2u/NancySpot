@@ -19,10 +19,6 @@ import java.util.logging.Level;
  *
  * Architecture :
  * - Clients HTTP/HTTPS → Service Central → Services RMI (BD, Proxy)
- *
- * @author Nancy Spot Team
- * @version 2.0
- * @since 1.0
  */
 public class Serveur implements ServiceCentral {
 

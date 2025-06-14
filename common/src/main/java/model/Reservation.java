@@ -7,10 +7,6 @@ import java.util.Date;
  * Représente une réservation de table avec gestion des créneaux horaires.
  * Une réservation lie une table, un créneau et une date spécifique avec
  * les informations du client.
- *
- * @author Nancy Spot Team
- * @version 2.0
- * @since 1.0
  */
 public class Reservation implements Serializable {
     private static final long serialVersionUID = 2L;

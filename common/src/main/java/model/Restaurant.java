@@ -6,10 +6,6 @@ import java.io.Serializable;
  * Représente un restaurant dans le système de réservation Nancy Spot.
  * Cette classe contient toutes les informations nécessaires pour identifier
  * et localiser un restaurant, incluant ses coordonnées géographiques.
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public class Restaurant implements Serializable {
     private static final long serialVersionUID = 1L;

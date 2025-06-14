@@ -7,10 +7,6 @@ import java.rmi.RemoteException;
  * Interface RMI pour le service de base de données du système Nancy Spot.
  * Ce service gère toutes les opérations de persistance des données,
  * incluant les restaurants, tables, créneaux horaires et réservations.
- *
- * @author Nancy Spot Team
- * @version 2.0
- * @since 1.0
  */
 public interface ServiceBD extends Remote {
 

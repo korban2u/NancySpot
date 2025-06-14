@@ -23,10 +23,6 @@ import java.io.IOException;
  * - Adresse complète
  * - Numéro de téléphone
  * - Coordonnées géographiques (latitude, longitude)
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public class RestaurantsHandler implements HttpHandler {
 

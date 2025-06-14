@@ -24,10 +24,6 @@ import java.io.IOException;
  *
  * Chaque service est testé individuellement avec un ping RMI
  * pour vérifier sa disponibilité effective.
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public class EtatServicesHandler implements HttpHandler {
 

@@ -17,10 +17,6 @@ import java.util.logging.Logger;
  * - Configuration du service central (ports RMI, HTTP, HTTPS)
  * - Configuration de la base de données (JDBC)
  * - Configuration du proxy réseau
- *
- * @author Nancy Spot Team
- * @version 1.0
- * @since 1.0
  */
 public class ConfigManager {
 
