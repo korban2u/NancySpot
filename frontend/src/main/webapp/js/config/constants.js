@@ -2,17 +2,12 @@
  * Configuration globale de l'application Nancy Spot
  * Contient les URLs d'API, paramètres de carte et configuration des marqueurs
  * @module config/constants
- * @constant {Object} NANCY_CONFIG
- * @property {string} API_BASE_URL - URL de base pour les appels API
- * @property {Object} ENDPOINTS - Points d'entrée de l'API
- * @property {Object} MAP - Configuration de la carte Leaflet
- * @property {Object} MARKERS - Configuration des marqueurs de carte
  */
 export const NANCY_CONFIG = {
     /** URL de base du service central - remplacée lors du build Maven */
     API_BASE_URL: 'API_BASE_URL_PLACEHOLDER',
 
-    /** Points d'entrée de l'API REST */
+    /** Points d'entrée de l'API REST backend */
     ENDPOINTS: {
         /** Endpoint pour récupérer la liste des restaurants */
         RESTAURANTS: '/restaurants',
@@ -20,12 +15,23 @@ export const NANCY_CONFIG = {
         TABLES: '/tables',
         /** Endpoint pour effectuer une réservation */
         RESERVER: '/reserver',
-        /** Endpoint pour récupérer les données Vélib */
-        VELIB: '/velib',
         /** Endpoint pour récupérer les incidents de circulation */
         INCIDENTS: '/incidents',
         /** Endpoint pour vérifier l'état des services */
         STATUS: '/services/etat'
+    },
+
+    /** APIs externes consommées directement côté frontend */
+    EXTERNAL_APIS: {
+        /** API Vélib Nancy (Cyclocity GBFS) */
+        VELIB: {
+            /** URL de découverte GBFS */
+            DISCOVERY: 'https://api.cyclocity.fr/contracts/nancy/gbfs/gbfs.json',
+            /** Informations statiques des stations */
+            STATION_INFO: 'https://api.cyclocity.fr/contracts/nancy/gbfs/station_information.json',
+            /** Statut en temps réel des stations */
+            STATION_STATUS: 'https://api.cyclocity.fr/contracts/nancy/gbfs/station_status.json'
+        }
     },
 
     /** Configuration de la carte Leaflet */
@@ -40,23 +46,17 @@ export const NANCY_CONFIG = {
     MARKERS: {
         /** Configuration des marqueurs restaurants */
         RESTAURANTS: {
-            /** Couleur de fond du marqueur restaurant */
             color: '#0d6efd',
-            /** Icône Bootstrap utilisée pour les restaurants */
             icon: 'bi-shop'
         },
         /** Configuration des marqueurs Vélib */
         VELIB: {
-            /** Couleur de fond du marqueur Vélib */
             color: '#198754',
-            /** Icône Bootstrap utilisée pour les stations Vélib */
             icon: 'bi-bicycle'
         },
         /** Configuration des marqueurs incidents */
         INCIDENTS: {
-            /** Couleur de fond du marqueur incident */
             color: '#ffc107',
-            /** Icône Bootstrap utilisée pour les incidents */
             icon: 'bi-exclamation-triangle'
         }
     }

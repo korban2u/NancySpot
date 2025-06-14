@@ -20,14 +20,11 @@ class NancyApp {
      * @constructor
      */
     constructor() {
-
         this.api = new ApiService();
-
         this.map = new MapManager();
-
         this.restaurantManager = new RestaurantManager(this.api, this.map);
 
-        this.velibManager = new VelibManager(this.api, this.map);
+        this.velibManager = new VelibManager(this.map);
 
         this.incidentManager = new IncidentManager(this.api, this.map);
 
@@ -241,35 +238,37 @@ class NancyApp {
         UIUtils.showLoading(true);
 
         try {
-            // Vérifier l'état des services
+            // Vérifier l'état des services backend uniquement
             const status = await this.api.get(NANCY_CONFIG.ENDPOINTS.STATUS);
             console.log('État des services:', status);
 
-            // Charger les données selon la disponibilité des services
             const promises = [];
 
+            // Restaurants : dépend du service BD
             if (status.serviceBD?.disponible) {
                 promises.push(this.restaurantManager.loadRestaurants());
             }
 
+            // Incidents : dépend du service proxy
             if (status.serviceProxy?.disponible) {
-                promises.push(this.velibManager.loadStations());
                 promises.push(this.incidentManager.loadIncidents());
             }
+
+            // Vélib : directement depuis l'API externe (indépendant du backend)
+            promises.push(this.velibManager.loadStations());
 
             await Promise.all(promises);
 
             // Afficher sur la carte
             this.displayAllDataOnMap();
 
-            // Mettre à jour les stats avec Handlebars
+            // Mettre à jour les stats
             UIUtils.updateStats(
                 this.restaurantManager.restaurants,
                 this.velibManager.stations,
                 this.incidentManager.incidents
             );
 
-            // Mettre à jour le compte-rendu si c'est l'onglet actif
             if (this.state.activeTab === 'compte-rendu') {
                 this.updateCompteRendu();
             }

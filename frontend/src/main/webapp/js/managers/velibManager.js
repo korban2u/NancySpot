@@ -2,39 +2,17 @@ import { NANCY_CONFIG } from '../config/constants.js';
 import { UIUtils } from '../utils/ui.js';
 
 /**
- * Gestionnaire des stations Vélib
- * Gère le chargement et l'affichage des stations de vélos en libre-service
- * @module managers/velibManager
+ * Gestionnaire des stations Vélib - Version API directe
+ * Consomme directement l'API Cyclocity GBFS sans passer par le backend
  */
 export class VelibManager {
-    /**
-     * Crée une instance du gestionnaire Vélib
-     * @constructor
-     * @param {ApiService} apiService - Service API pour les requêtes
-     * @param {MapManager} mapManager - Gestionnaire de carte pour l'affichage
-     */
-    constructor(apiService, mapManager) {
-        /** @private {ApiService} Service pour les appels API */
-        this.api = apiService;
-
-        /** @private {MapManager} Gestionnaire de la carte */
+    constructor(mapManager) {
         this.map = mapManager;
-
-        /** @public {Array} Liste des stations Vélib chargées */
         this.stations = [];
-
-        /** @private {Function|null} Template Handlebars compilé pour les popups */
         this.template = null;
-
         this.initTemplate();
     }
 
-    /**
-     * Initialise le template Handlebars pour les popups des stations
-     * @private
-     * @example
-     * this.initTemplate(); // Appelé automatiquement dans le constructeur
-     */
     initTemplate() {
         const template = document.getElementById('velib-popup-template');
         if (template) {
@@ -43,19 +21,34 @@ export class VelibManager {
     }
 
     /**
-     * Charge la liste des stations Vélib depuis l'API
-     * @async
-     * @returns {Promise<Array>} Liste des stations ou tableau vide en cas d'erreur
-     * @throws {Error} En cas d'erreur de communication avec l'API
-     * @example
-     * const stations = await velibManager.loadStations();
-     * console.log(`${stations.length} stations Vélib chargées`);
+     * Charge les stations Vélib directement depuis l'API Cyclocity
      */
     async loadStations() {
         try {
-            const data = await this.api.get(NANCY_CONFIG.ENDPOINTS.VELIB);
-            this.stations = data.stations || [];
+            console.log('Chargement des données Vélib depuis l\'API Cyclocity...');
+
+            // Utilisation des URLs depuis les constantes
+            const [stationInfoResponse, stationStatusResponse] = await Promise.all([
+                fetch(NANCY_CONFIG.EXTERNAL_APIS.VELIB.STATION_INFO),
+                fetch(NANCY_CONFIG.EXTERNAL_APIS.VELIB.STATION_STATUS)
+            ]);
+
+            if (!stationInfoResponse.ok || !stationStatusResponse.ok) {
+                throw new Error('Erreur lors de la récupération des données Vélib');
+            }
+
+            const stationInfoData = await stationInfoResponse.json();
+            const stationStatusData = await stationStatusResponse.json();
+
+            // Traitement des données
+            this.stations = this.processStationsData(
+                stationInfoData.data.stations,
+                stationStatusData.data.stations
+            );
+
+            console.log(`${this.stations.length} stations Vélib chargées`);
             return this.stations;
+
         } catch (error) {
             console.error('Erreur chargement Vélib:', error);
             UIUtils.showToast('Erreur lors du chargement des stations Vélib', 'warning');
@@ -64,11 +57,34 @@ export class VelibManager {
     }
 
     /**
-     * Affiche toutes les stations Vélib sur la carte sous forme de marqueurs
-     * Utilise le template Handlebars pour générer le contenu des popups
-     * @example
-     * await velibManager.loadStations();
-     * velibManager.displayOnMap();
+     * Traite et combine les données des stations
+     */
+    processStationsData(stationsInfo, stationsStatus) {
+        // Créer un index des statuts par station_id
+        const statusMap = new Map();
+        stationsStatus.forEach(status => {
+            statusMap.set(status.station_id, status);
+        });
+
+        // Combiner les informations et statuts
+        return stationsInfo.map(station => {
+            const status = statusMap.get(station.station_id);
+
+            return {
+                id: station.station_id,
+                nom: station.name,
+                latitude: station.lat,
+                longitude: station.lon,
+                velosDisponibles: status ? status.num_bikes_available : 0,
+                placesDisponibles: status ? status.num_docks_available : 0,
+                estOuverte: status ? status.is_installed && status.is_renting : false,
+                capacite: station.capacity || 0
+            };
+        }).filter(station => station.estOuverte); // Ne garder que les stations ouvertes
+    }
+
+    /**
+     * Affiche les stations sur la carte
      */
     displayOnMap() {
         this.map.clearMarkers('velib');
@@ -80,5 +96,17 @@ export class VelibManager {
 
             this.map.addMarker('velib', station, popupContent);
         });
+    }
+
+    /**
+     * Méthode utilitaire pour vérifier la disponibilité de l'API
+     */
+    async checkApiHealth() {
+        try {
+            const response = await fetch(NANCY_CONFIG.EXTERNAL_APIS.VELIB.DISCOVERY);
+            return response.ok;
+        } catch (error) {
+            return false;
+        }
     }
 }
