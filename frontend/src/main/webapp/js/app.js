@@ -203,15 +203,32 @@ class NancyApp {
      * Met à jour la visibilité des contenus selon l'onglet actif
      */
     updateContentVisibility() {
-        const carteContent = document.querySelector('#map')?.closest('.position-relative');
-        const compteRenduContent = document.querySelector('.container.my-4');
+        // Utilisation des conteneurs spécifiques définis dans le template
+        const carteContainer = document.getElementById('carte-container');
+        const compteRenduContainer = document.getElementById('compte-rendu-container');
+
+        console.log('Changement onglet vers:', this.state.activeTab);
 
         if (this.state.activeTab === 'carte') {
-            if (carteContent) carteContent.style.display = 'block';
-            if (compteRenduContent) compteRenduContent.style.display = 'none';
-        } else {
-            if (carteContent) carteContent.style.display = 'none';
-            if (compteRenduContent) compteRenduContent.style.display = 'block';
+            // Afficher la carte, masquer le compte-rendu
+            if (carteContainer) {
+                carteContainer.classList.remove('d-none');
+                console.log('Carte affichée');
+            }
+            if (compteRenduContainer) {
+                compteRenduContainer.classList.add('d-none');
+                console.log('Compte-rendu masqué');
+            }
+        } else if (this.state.activeTab === 'compte-rendu') {
+            // Masquer la carte, afficher le compte-rendu
+            if (carteContainer) {
+                carteContainer.classList.add('d-none');
+                console.log('Carte masquée');
+            }
+            if (compteRenduContainer) {
+                compteRenduContainer.classList.remove('d-none');
+                console.log('Compte-rendu affiché');
+            }
         }
     }
 

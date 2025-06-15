@@ -1,9 +1,4 @@
-/* ================================= */
-/* NANCY SPOT - CSS MINIMAL         */
-/* Bootstrap fait le gros du travail */
-/* ================================= */
 
-/* Variables pour les couleurs du projet */
 :root {
     --nancy-primary: #0d6efd;
     --nancy-success: #198754;
@@ -11,9 +6,6 @@
     --nancy-danger: #dc3545;
 }
 
-/* ================================= */
-/* NAVIGATION                        */
-/* ================================= */
 
 .nav-link.btn {
     border: none;
@@ -27,9 +19,6 @@
     background-color: rgba(13, 110, 253, 0.1);
 }
 
-/* ================================= */
-/* MARQUEURS DE CARTE               */
-/* ================================= */
 
 .custom-div-icon {
     background: transparent !important;
@@ -50,7 +39,7 @@
     border: 2px solid white;
 }
 
-/* Flèche du marqueur */
+
 .marker-icon::after {
     content: '';
     position: absolute;
@@ -64,7 +53,6 @@
     border-top: 8px solid;
 }
 
-/* Couleurs des marqueurs */
 .restaurant-icon {
     background-color: var(--nancy-primary);
 }
@@ -90,11 +78,6 @@
     border-top-color: var(--nancy-warning);
 }
 
-/* ================================= */
-/* SYSTÈME DE RÉSERVATION           */
-/* ================================= */
-
-/* Créneaux */
 .creneau-card {
     transition: all 0.3s ease;
     border: 2px solid transparent;
@@ -112,7 +95,7 @@
     background-color: rgba(13, 110, 253, 0.1);
 }
 
-/* Tables */
+
 .table-card {
     transition: all 0.3s ease;
     border: 2px solid transparent;
@@ -139,7 +122,6 @@
     cursor: not-allowed;
 }
 
-/* Animation des étapes */
 .step-container {
     animation: fadeIn 0.3s ease-in-out;
 }
@@ -155,10 +137,6 @@
     }
 }
 
-/* ================================= */
-/* POPUPS LEAFLET                   */
-/* ================================= */
-
 .leaflet-popup-content-wrapper {
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -170,26 +148,16 @@
     min-width: 250px;
 }
 
-/* ================================= */
-/* TOAST                            */
-/* ================================= */
 
 .toast {
     min-width: 300px;
 }
 
-/* ================================= */
-/* CONTRÔLES FILTRE                 */
-/* ================================= */
 
 .btn-check:checked + .btn {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
-
-/* ================================= */
-/* RESPONSIVE                       */
-/* ================================= */
 
 @media (max-width: 768px) {
     #map {
@@ -207,19 +175,12 @@
     }
 }
 
-/* ================================= */
-/* AMÉLIORATION ACCESSIBILITÉ       */
-/* ================================= */
-
 .btn:focus,
 .form-control:focus,
 .form-select:focus {
     box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 
-/* ================================= */
-/* ANIMATIONS SIMPLES               */
-/* ================================= */
 
 .btn, .card {
     transition: all 0.3s ease;
@@ -229,9 +190,6 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* ================================= */
-/* LOADING                          */
-/* ================================= */
 
 .spinner-border {
     width: 3rem;

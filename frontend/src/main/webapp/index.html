@@ -86,10 +86,17 @@
         </div>
     </div>
 
-    <!-- Contenu -->
+    <!-- Contenu principal avec IDs uniques -->
     <main class="flex-fill position-relative">
-        {{{carteContent}}}
-        {{{compteRenduContent}}}
+        <!-- Contenu de la carte -->
+        <div id="carte-container" class="{{#unless (eq activeTab 'carte')}}d-none{{/unless}}">
+            {{{carteContent}}}
+        </div>
+
+        <!-- Contenu du compte-rendu -->
+        <div id="compte-rendu-container" class="{{#unless (eq activeTab 'compte-rendu')}}d-none{{/unless}}">
+            {{{compteRenduContent}}}
+        </div>
     </main>
 
     <!-- Toast -->
@@ -523,9 +530,6 @@
     </div>
 </script>
 
-<!-- ================================= -->
-<!-- TEMPLATES COMPTE-RENDU -->
-<!-- ================================= -->
 
 <!-- Template Compte-rendu -->
 <script id="compte-rendu-template" type="text/x-handlebars-template">
@@ -533,13 +537,13 @@
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <div class="text-center mb-5">
-                    <h2 class="text-primary mb-4">Nancy Spot - Architecture Répartie</h2>
-                    <p class="lead text-muted">Application distribuée pour la gestion d'informations urbaines à Nancy</p>
+                    <h2 class="text-primary mb-4">Nancy Spot - Architecture</h2>
+                    <p class="lead text-muted">Ryan Korban, Maxence Eva, Baptiste Delaborde, Baptiste Hennequin</p>
                 </div>
 
-                <!-- Vue d'ensemble de l'architecture -->
+
                 <section class="mb-5">
-                    <h3 class="text-primary mb-4">Vue d'ensemble de l'architecture</h3>
+                    <h3 class="text-primary mb-4">Architecture de base</h3>
                     <div class="text-center mb-4">
                         <img src="images/architecture-generale.png"
                              alt="Architecture générale Nancy Spot"
@@ -547,10 +551,9 @@
                              style="max-width: 100%;">
                     </div>
                     <p class="mt-4">
-                        Nancy Spot est une application répartie basée sur une architecture multi-tiers combinant
-                        technologies web modernes et communication RMI (Remote Method Invocation). L'application
-                        permet d'afficher sur une carte interactive diverses informations concernant la ville de Nancy :
-                        restaurants avec système de réservation, stations Vélib' en temps réel, et incidents de circulation.
+                        Nancy Spot est une application répartie basée sur java RMI qui communique avec des API. L'application
+                        permet d'afficher sur une carte plusieurs informations concernant la ville de Nancy tel que
+                        des restaurants que on peut réserver, des stations Vélib et leurs données en temps réel, et enfin les incidents de circulation à nancy.
                     </p>
                 </section>
 
@@ -563,16 +566,16 @@
                             <div class="card h-100 shadow-sm">
                                 <div class="card-body">
                                     <h5 class="card-title text-primary">
-                                        <i class="bi bi-globe me-2"></i>Frontend Web (Webetu)
+                                        <i class="bi bi-globe me-2"></i>Frontend (Webetu)
                                     </h5>
                                     <p class="card-text">
-                                        Interface utilisateur développée en JavaScript ES6 avec modules, utilisant :
+                                        Interface en JavaScript ES6 avec les modules :
                                     </p>
                                     <ul class="small">
-                                        <li>Leaflet pour la cartographie interactive</li>
-                                        <li>Bootstrap 5 pour l'interface responsive</li>
-                                        <li>Handlebars pour le templating dynamique</li>
-                                        <li>API Fetch pour les requêtes HTTP/HTTPS</li>
+                                        <li>Leaflet pour la carte interactive</li>
+                                        <li>Bootstrap 5 pour le css</li>
+                                        <li>Handlebars pour le templating</li>
+                                        <li>Fetch pour les requêtes HTTP/HTTPS</li>
                                     </ul>
                                 </div>
                             </div>
@@ -588,9 +591,9 @@
                                         Serveur HTTP/HTTPS servant de passerelle entre le frontend et les services RMI :
                                     </p>
                                     <ul class="small">
-                                        <li>Expose des endpoints REST pour le frontend</li>
-                                        <li>Maintient un registre RMI (port 1098)</li>
-                                        <li>Gère l'orchestration des services backend</li>
+                                        <li>Donne les endpoints au frontend</li>
+                                        <li>A un registre RMI (port 1098, on peut le choisir librement)</li>
+                                        <li>Gère les services BD et Proxy</li>
                                         <li>Support HTTPS avec certificat auto-signé</li>
                                     </ul>
                                 </div>
@@ -610,9 +613,9 @@
                                     </p>
                                     <ul class="small">
                                         <li>Gestion des restaurants et réservations</li>
-                                        <li>Système de créneaux horaires (déjeuner, dîner)</li>
-                                        <li>Transactions ACID pour les réservations</li>
-                                        <li>DAO pattern pour l'accès aux données</li>
+                                        <li>Avec créneaux horaires (ex. déjeuner, dîner)</li>
+                                        <li>Gestion des transactions</li>
+                                        <li>Utilisation de DAO pour l'accès aux données</li>
                                     </ul>
                                 </div>
                             </div>
@@ -625,13 +628,13 @@
                                         <i class="bi bi-cloud-arrow-down me-2"></i>Service Proxy
                                     </h5>
                                     <p class="card-text">
-                                        Service RMI pour l'accès aux APIs externes :
+                                        Service RMI pour l'accès aux API externes :
                                     </p>
                                     <ul class="small">
                                         <li>Récupération des incidents Grand Nancy</li>
-                                        <li>Support du proxy réseau IUT</li>
-                                        <li>Cache et transformation des données</li>
-                                        <li>Gestion des timeouts et erreurs réseau</li>
+                                        <li>On peut utiliser facilement le proxy de l'IUT</li>
+                                        <li>Transforme les données</li>
+                                        <li>Gère les erreurs réseau</li>
                                     </ul>
                                 </div>
                             </div>
@@ -641,7 +644,7 @@
 
                 <!-- Diagrammes de classes -->
                 <section class="mb-5">
-                    <h3 class="text-primary mb-4">Architecture détaillée des services</h3>
+                    <h3 class="text-primary mb-4">Digrammes de classes</h3>
 
                     <div class="accordion" id="architectureAccordion">
                         <!-- Service BD -->
@@ -684,9 +687,9 @@
                                          class="img-fluid rounded"
                                          style="max-width: 100%;">
                                     <p class="mt-3">
-                                        Le Service Central agit comme orchestrateur, exposant des endpoints HTTP
-                                        via des handlers spécialisés. Il maintient les références vers les services
-                                        RMI et gère leur cycle de vie.
+                                        Le Service Central donne des endpoints HTTP
+                                        via des handlers que on a codé. Il a dans son annuaire les références distantes des services
+                                        RMI.
                                     </p>
                                 </div>
                             </div>
@@ -709,8 +712,7 @@
                                          style="max-width: 100%;">
                                     <p class="mt-3">
                                         Le Service Proxy utilise le pattern Strategy avec BaseHttpClient pour
-                                        gérer différentes sources de données externes. Il inclut la gestion du
-                                        proxy réseau pour les environnements restreints.
+                                        gérer différentes sources de données externes. (ici on gère que les incidents, mais on peut facilement ajouter d'autre API)
                                     </p>
                                 </div>
                             </div>
@@ -720,18 +722,18 @@
 
                 <!-- Communication entre services -->
                 <section class="mb-5">
-                    <h3 class="text-primary mb-4">Flux de communication</h3>
+                    <h3 class="text-primary mb-4">Communication</h3>
                     <div class="row">
                         <div class="col-lg-6 mb-4">
                             <h5>Communication RMI</h5>
                             <p>
-                                Les services backend communiquent via RMI (Remote Method Invocation) :
+                                Les services communiquent avec RMI :
                             </p>
                             <ul>
-                                <li>Le Service Central maintient un registre RMI sur le port 1098</li>
-                                <li>Les services BD et Proxy s'enregistrent dynamiquement au démarrage</li>
-                                <li>Mécanisme de heartbeat (ping) pour vérifier la disponibilité</li>
-                                <li>Désenregistrement automatique en cas de panne</li>
+                                <li>Le Service Central a un registre RMI sur le port 1098 (que on choisit)</li>
+                                <li>Les services BD et Proxy s'enregistrent au démarrage</li>
+                                <li>On peut ping pour vérifier la disponibilité des services</li>
+                                <li>Dés enregistrement automatique en cas de non réponses </li>
                             </ul>
                         </div>
                         <div class="col-lg-6 mb-4">
@@ -740,10 +742,10 @@
                                 Le frontend communique avec le Service Central via HTTP/HTTPS :
                             </p>
                             <ul>
-                                <li>Endpoints RESTful pour chaque fonctionnalité</li>
-                                <li>Support CORS pour les requêtes cross-origin</li>
-                                <li>Réponses JSON standardisées</li>
-                                <li>Gestion d'erreurs cohérente</li>
+                                <li>Endpoints pour chaque fonctionnalité</li>
+                                <li>Support CORS</li>
+                                <li>Réponses JSON</li>
+                                <li>Gestion d'erreurs</li>
                             </ul>
                         </div>
                     </div>
@@ -751,20 +753,20 @@
 
                 <!-- Technologies utilisées -->
                 <section class="mb-5">
-                    <h3 class="text-primary mb-4">Stack technologique</h3>
+                    <h3 class="text-primary mb-4">Technologies</h3>
                     <div class="row g-3">
                         <div class="col-md-3">
                             <div class="text-center">
                                 <i class="bi bi-cup-hot fs-1 text-primary"></i>
                                 <h6 class="mt-2">Java 17</h6>
-                                <small class="text-muted">Backend services</small>
+                                <small class="text-muted">Services Java</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="text-center">
                                 <i class="bi bi-database fs-1 text-warning"></i>
                                 <h6 class="mt-2">Oracle DB</h6>
-                                <small class="text-muted">Persistance</small>
+                                <small class="text-muted">Base de donnée</small>
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -778,7 +780,7 @@
                             <div class="text-center">
                                 <i class="bi bi-box fs-1 text-info"></i>
                                 <h6 class="mt-2">Maven</h6>
-                                <small class="text-muted">Build & Deploy</small>
+                                <small class="text-muted">Compilation</small>
                             </div>
                         </div>
                     </div>
@@ -786,11 +788,11 @@
 
                 <!-- Points clés -->
                 <section class="mb-5">
-                    <h3 class="text-primary mb-4">Points clés de l'architecture</h3>
+                    <h3 class="text-primary mb-4">Points IMPORTANTS de l'architecture</h3>
                     <div class="alert alert-info">
                         <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Modularité</h6>
                         <p class="mb-0">
-                            Chaque service est indépendant et peut être déployé séparément. Le module common
+                            Chaque service est indépendant et peut être lancé séparément. Le module common
                             contient les interfaces et modèles partagés.
                         </p>
                     </div>
@@ -798,14 +800,14 @@
                         <h6 class="alert-heading"><i class="bi bi-shield-check me-2"></i>Sécurité</h6>
                         <p class="mb-0">
                             Support HTTPS avec certificats SSL, validation des données côté serveur,
-                            et transactions ACID pour les réservations.
+                            et support des transactions pour les réservations.
                         </p>
                     </div>
                     <div class="alert alert-warning">
-                        <h6 class="alert-heading"><i class="bi bi-arrow-repeat me-2"></i>Résilience</h6>
+                        <h6 class="alert-heading"><i class="bi bi-arrow-repeat me-2"></i>Gestion des erreurs</h6>
                         <p class="mb-0">
-                            Gestion des pannes avec désenregistrement automatique, timeouts configurables,
-                            et mécanismes de retry pour les API externes.
+                            Gestion des bugs avec désenregistrement automatique, timeouts configurables,
+                            et retry en cas de non réponse.
                         </p>
                     </div>
                 </section>
