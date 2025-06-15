@@ -10,7 +10,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Projet SAE Nancy - Application Répartie</name>
+    <name>Projet SAE - Application Répartie</name>
     <description>Application distribuée pour afficher des informations Nancy sur carte</description>
 
     <properties>
