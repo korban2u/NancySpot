@@ -72,7 +72,7 @@ public class TablesCreneauxHandler implements HttpHandler {
      * - date : Date au format yyyy-MM-dd
      * - creneauId : Identifiant numérique du créneau horaire
      *
-     * Exemple : /tables/libres/1/2024-12-25/2
+     * Exemple : /tables/libres/1/2025-12-25/2
      *
      * Filtrage appliqué :
      * - Tables sans réservation confirmée pour le créneau/date
@@ -95,7 +95,7 @@ public class TablesCreneauxHandler implements HttpHandler {
      *     }
      *   ],
      *   "restaurantId": 1,
-     *   "date": "2024-12-25",
+     *   "date": "2025-12-25",
      *   "creneauId": 2,
      *   "disponibles": 3
      * }
@@ -135,7 +135,7 @@ public class TablesCreneauxHandler implements HttpHandler {
      * - date : Date au format yyyy-MM-dd
      * - creneauId : Identifiant numérique du créneau horaire
      *
-     * Exemple : /tables/statut/1/2024-12-25/2
+     * Exemple : /tables/statut/1/2025-12-25/2
      *
      * Informations fournies :
      * - Toutes les tables du restaurant
@@ -170,7 +170,7 @@ public class TablesCreneauxHandler implements HttpHandler {
      *     }
      *   ],
      *   "restaurantId": 1,
-     *   "date": "2024-12-25",
+     *   "date": "2025-12-25",
      *   "creneauId": 2,
      *   "totalTables": 15,
      *   "tablesLibres": 12,
@@ -212,7 +212,7 @@ public class TablesCreneauxHandler implements HttpHandler {
      * - date : Date au format yyyy-MM-dd
      * - creneauId : Identifiant numérique du créneau horaire
      *
-     * Exemple : /tables/disponibilite/15/2024-12-25/2
+     * Exemple : /tables/disponibilite/15/2025-12-25/2
      *
      * Réponse en cas de succès :
      * - Code HTTP 200
@@ -223,7 +223,7 @@ public class TablesCreneauxHandler implements HttpHandler {
      * {
      *   "disponible": true,
      *   "tableId": 15,
-     *   "date": "2024-12-25",
+     *   "date": "2025-12-25",
      *   "creneauId": 2,
      *   "table": {
      *     "numeroTable": 5,

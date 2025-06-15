@@ -36,7 +36,7 @@ CENTRAL_HTTPS_ENABLED ?= false
 # Configuration HTTPS
 CENTRAL_KEYSTORE_PATH ?= nancy-keystore.jks
 CENTRAL_KEYSTORE_PASSWORD ?= password123
-SSL_KEYSTORE_PASSWORD ?= nancy2024
+SSL_KEYSTORE_PASSWORD ?= nancy2025
 
 # URL dynamique selon le protocole
 ifeq ($(CENTRAL_HTTPS_ENABLED),true)

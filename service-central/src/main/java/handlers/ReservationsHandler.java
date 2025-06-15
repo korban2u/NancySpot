@@ -74,7 +74,7 @@ public class ReservationsHandler implements HttpHandler {
      * - restaurantId : Identifiant numérique du restaurant
      * - date : Date au format yyyy-MM-dd
      *
-     * Exemple : /reservations/date/1/2024-12-25
+     * Exemple : /reservations/date/1/2025-12-25
      *
      * Réponse en cas de succès :
      * - Code HTTP 200
@@ -97,7 +97,7 @@ public class ReservationsHandler implements HttpHandler {
      *       "table": { "numeroTable": 12, ... }
      *     }
      *   ],
-     *   "date": "2024-12-25",
+     *   "date": "2025-12-25",
      *   "restaurantId": 1
      * }
      *

@@ -23,7 +23,7 @@ central.keystore.path=${CENTRAL_KEYSTORE_PATH:-nancy-keystore.jks}
 central.keystore.password=${CENTRAL_KEYSTORE_PASSWORD:-password123}
 
 # Configuration SSL
-ssl.keystore.password=${SSL_KEYSTORE_PASSWORD:-nancy2024}
+ssl.keystore.password=${SSL_KEYSTORE_PASSWORD:-nancy2025}
 EOF
 
 echo "Configuration générée:"
