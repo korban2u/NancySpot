@@ -20,9 +20,6 @@
 <!-- Conteneur principal de l'application -->
 <div id="app"></div>
 
-<!-- ================================= -->
-<!-- TEMPLATES HANDLEBARS PRINCIPAUX  -->
-<!-- ================================= -->
 
 <!-- Template Layout Principal -->
 <script id="layout-template" type="text/x-handlebars-template">
@@ -141,9 +138,6 @@
     </div>
 </script>
 
-<!-- ================================= -->
-<!-- TEMPLATES RESTAURANTS ET RÉSERVATION -->
-<!-- ================================= -->
 
 <!-- Template Popup Restaurant Amélioré -->
 <script id="restaurant-popup-creneaux-template" type="text/x-handlebars-template">
@@ -154,15 +148,6 @@
             <p class="mb-0 small"><i class="bi bi-telephone text-muted me-1"></i>{{telephone}}</p>
         </div>
 
-        <!-- Indicateur de créneaux disponibles -->
-        <div class="mb-3">
-            <small class="text-muted d-block mb-2">Créneaux disponibles:</small>
-            <div class="d-flex flex-wrap gap-1">
-                <span class="badge bg-primary">Déjeuner</span>
-                <span class="badge bg-primary">Dîner</span>
-                <span class="badge bg-secondary">Brunch</span>
-            </div>
-        </div>
 
         <button class="btn btn-primary w-100 reserve-btn"
                 data-restaurant-id="{{id}}"
@@ -457,9 +442,6 @@
     </div>
 </script>
 
-<!-- ================================= -->
-<!-- TEMPLATES VÉLIB -->
-<!-- ================================= -->
 
 <!-- Template Popup Vélib -->
 <script id="velib-popup-template" type="text/x-handlebars-template">
@@ -496,9 +478,6 @@
     </div>
 </script>
 
-<!-- ================================= -->
-<!-- TEMPLATES INCIDENTS -->
-<!-- ================================= -->
 
 <!-- Template Popup Incident -->
 <script id="incident-popup-template" type="text/x-handlebars-template">
@@ -517,9 +496,6 @@
     </div>
 </script>
 
-<!-- ================================= -->
-<!-- TEMPLATES UTILITAIRES -->
-<!-- ================================= -->
 
 <!-- Template pour les statistiques -->
 <script id="stats-template" type="text/x-handlebars-template">
@@ -532,7 +508,6 @@
 
 
 <!-- Template Compte-rendu -->
-<!-- Template Compte-rendu Enrichi et Complet -->
 <script id="compte-rendu-template" type="text/x-handlebars-template">
     <div class="container my-5">
         <div class="row justify-content-center">
@@ -831,38 +806,7 @@
                         </div>
                     </div>
 
-                    <!-- Statistiques temps réel -->
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            <h6 class="mb-0">Statistiques actuelles</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row text-center">
-                                <div class="col-md-4">
-                                    <div class="p-3 bg-primary bg-opacity-10 rounded">
-                                        <i class="bi bi-shop fs-2 text-primary"></i>
-                                        <div class="h4 mb-0">{{#if stats}}{{stats.restaurants}}{{else}}0{{/if}}</div>
-                                        <small class="text-muted">Restaurants</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="p-3 bg-success bg-opacity-10 rounded">
-                                        <i class="bi bi-bicycle fs-2 text-success"></i>
-                                        <div class="h4 mb-0">{{#if stats}}{{stats.velib}}{{else}}0{{/if}}</div>
-                                        <small class="text-muted">Stations Vélib</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="p-3 bg-warning bg-opacity-10 rounded">
-                                        <i class="bi bi-exclamation-triangle fs-2 text-warning"></i>
-                                        <div class="h4 mb-0">{{#if stats}}{{stats.incidents}}{{else}}0{{/if}}</div>
-                                        <small class="text-muted">Incidents</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+
 
                 <!-- 4. Technologies utilisées -->
                 <section id="technologies" class="mb-5">
