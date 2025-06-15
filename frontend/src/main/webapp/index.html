@@ -118,12 +118,12 @@
         <div id="map" style="height: calc(100vh - 140px);"></div>
 
         {{#if loading}}
-        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white bg-opacity-75" style="z-index: 1000;">
-            <div class="text-center">
-                <div class="spinner-border text-primary mb-3" role="status"></div>
-                <p class="text-muted">Chargement...</p>
+            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white bg-opacity-75" style="z-index: 1000;">
+                <div class="text-center">
+                    <div class="spinner-border text-primary mb-3" role="status"></div>
+                    <p class="text-muted">Chargement...</p>
+                </div>
             </div>
-        </div>
         {{/if}}
 
         <!-- Stats -->
@@ -311,75 +311,75 @@
 <!-- Template pour les créneaux disponibles -->
 <script id="creneaux-disponibles-template" type="text/x-handlebars-template">
     {{#if creneaux.length}}
-    <div class="row g-3">
-        {{#each creneaux}}
-        <div class="col-md-6">
-            <div class="card creneau-card h-100" data-creneau-id="{{id}}" style="cursor: pointer;">
-                <div class="card-body text-center">
-                    <h6 class="card-title text-primary">{{libelle}}</h6>
-                    <p class="card-text">
-                        <i class="bi bi-clock text-muted me-1"></i>
-                        <span class="fw-bold">{{heureDebut}} - {{heureFin}}</span>
-                    </p>
-                    <small class="text-muted">Cliquez pour sélectionner</small>
+        <div class="row g-3">
+            {{#each creneaux}}
+                <div class="col-md-6">
+                    <div class="card creneau-card h-100" data-creneau-id="{{id}}" style="cursor: pointer;">
+                        <div class="card-body text-center">
+                            <h6 class="card-title text-primary">{{libelle}}</h6>
+                            <p class="card-text">
+                                <i class="bi bi-clock text-muted me-1"></i>
+                                <span class="fw-bold">{{heureDebut}} - {{heureFin}}</span>
+                            </p>
+                            <small class="text-muted">Cliquez pour sélectionner</small>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            {{/each}}
         </div>
-        {{/each}}
-    </div>
     {{else}}
-    <div class="alert alert-warning text-center">
-        <i class="bi bi-exclamation-triangle me-2"></i>
-        Aucun créneau disponible pour cette date
-    </div>
+        <div class="alert alert-warning text-center">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Aucun créneau disponible pour cette date
+        </div>
     {{/if}}
 </script>
 
 <!-- Template pour les tables avec statut -->
 <script id="tables-avec-statut-template" type="text/x-handlebars-template">
     {{#if tables.length}}
-    <div class="row g-2">
-        {{#each tables}}
-        <div class="col-6 col-md-4 col-lg-3">
-            <div class="card table-card h-100 {{#unless disponible}}table-occupee{{/unless}}"
-                 data-table-id="{{id}}"
-                 {{#if disponible}}data-selectable="true" style="cursor: pointer;"{{/if}}>
-            <div class="card-body text-center p-2">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="fw-bold">Table {{numeroTable}}</span>
-                    {{#if disponible}}
-                    <i class="bi bi-check-circle text-success"></i>
-                    {{else}}
-                    <i class="bi bi-x-circle text-danger"></i>
-                    {{/if}}
+        <div class="row g-2">
+            {{#each tables}}
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card table-card h-100 {{#unless disponible}}table-occupee{{/unless}}"
+                         data-table-id="{{id}}"
+                        {{#if disponible}}data-selectable="true" style="cursor: pointer;"{{/if}}>
+                        <div class="card-body text-center p-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold">Table {{numeroTable}}</span>
+                                {{#if disponible}}
+                                    <i class="bi bi-check-circle text-success"></i>
+                                {{else}}
+                                    <i class="bi bi-x-circle text-danger"></i>
+                                {{/if}}
+                            </div>
+                            <small class="text-muted">
+                                <i class="bi bi-people me-1"></i>{{nbPlaces}} places
+                            </small>
+                            <div class="mt-2">
+                                {{#if disponible}}
+                                    <span class="badge bg-success">Disponible</span>
+                                {{else}}
+                                    <span class="badge bg-danger">Occupée</span>
+                                {{/if}}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <small class="text-muted">
-                    <i class="bi bi-people me-1"></i>{{nbPlaces}} places
-                </small>
-                <div class="mt-2">
-                    {{#if disponible}}
-                    <span class="badge bg-success">Disponible</span>
-                    {{else}}
-                    <span class="badge bg-danger">Occupée</span>
-                    {{/if}}
-                </div>
-            </div>
+            {{/each}}
         </div>
-    </div>
-    {{/each}}
-    </div>
-    <input type="hidden" id="tableId" name="tableId" required>
-    <div class="mt-3">
-        <small class="text-muted">
-            <i class="bi bi-info-circle me-1"></i>
-            Sélectionnez une table disponible (en vert) pour continuer
-        </small>
-    </div>
+        <input type="hidden" id="tableId" name="tableId" required>
+        <div class="mt-3">
+            <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                Sélectionnez une table disponible (en vert) pour continuer
+            </small>
+        </div>
     {{else}}
-    <div class="alert alert-warning text-center">
-        <i class="bi bi-exclamation-triangle me-2"></i>
-        Aucune table disponible pour ce créneau
-    </div>
+        <div class="alert alert-warning text-center">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Aucune table disponible pour ce créneau
+        </div>
     {{/if}}
 </script>
 
@@ -439,20 +439,20 @@
         <div>
             <strong>{{title}}</strong>
             {{#if message}}
-            <div class="mt-1">{{message}}</div>
+                <div class="mt-1">{{message}}</div>
             {{/if}}
             {{#if details}}
-            <div class="mt-2">
-                <small>
-                    {{#each details}}
-                    <div>• {{this}}</div>
-                    {{/each}}
-                </small>
-            </div>
+                <div class="mt-2">
+                    <small>
+                        {{#each details}}
+                            <div>• {{this}}</div>
+                        {{/each}}
+                    </small>
+                </div>
             {{/if}}
         </div>
         {{#if showCloseButton}}
-        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
         {{/if}}
     </div>
 </script>
@@ -472,26 +472,26 @@
             </span>
         </div>
         {{#if estOuverte}}
-        <div class="row g-2">
-            <div class="col-6">
-                <div class="card bg-primary bg-opacity-10">
-                    <div class="card-body p-2 text-center">
-                        <i class="bi bi-bicycle text-primary fs-4"></i>
-                        <div class="fw-bold">{{velosDisponibles}}</div>
-                        <small class="text-muted">vélos</small>
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="card bg-primary bg-opacity-10">
+                        <div class="card-body p-2 text-center">
+                            <i class="bi bi-bicycle text-primary fs-4"></i>
+                            <div class="fw-bold">{{velosDisponibles}}</div>
+                            <small class="text-muted">vélos</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card bg-success bg-opacity-10">
+                        <div class="card-body p-2 text-center">
+                            <i class="bi bi-p-square text-success fs-4"></i>
+                            <div class="fw-bold">{{placesDisponibles}}</div>
+                            <small class="text-muted">places</small>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-6">
-                <div class="card bg-success bg-opacity-10">
-                    <div class="card-body p-2 text-center">
-                        <i class="bi bi-p-square text-success fs-4"></i>
-                        <div class="fw-bold">{{placesDisponibles}}</div>
-                        <small class="text-muted">places</small>
-                    </div>
-                </div>
-            </div>
-        </div>
         {{/if}}
     </div>
 </script>
@@ -532,285 +532,787 @@
 
 
 <!-- Template Compte-rendu -->
+<!-- Template Compte-rendu Enrichi et Complet -->
 <script id="compte-rendu-template" type="text/x-handlebars-template">
     <div class="container my-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
+                <!-- En-tête -->
                 <div class="text-center mb-5">
-                    <h2 class="text-primary mb-4">Nancy Spot - Architecture</h2>
-                    <p class="lead text-muted">Ryan Korban, Maxence Eva, Baptiste Delaborde, Baptiste Hennequin</p>
+                    <h1 class="text-primary mb-3">Nancy Spot</h1>
+                    <h2 class="h4 text-muted mb-4">Application Répartie - Compte Rendu</h2>
+                    <p class="lead">
+                        <strong>Groupe :</strong> Ryan Korban, Maxence Eva, Baptiste Delaborde, Baptiste Hennequin<br>
+
+                    </p>
                 </div>
 
-
-                <section class="mb-5">
-                    <h3 class="text-primary mb-4">Architecture de base</h3>
-                    <div class="text-center mb-4">
-                        <img src="images/architecture-generale.png"
-                             alt="Architecture générale Nancy Spot"
-                             class="img-fluid rounded shadow-lg"
-                             style="max-width: 100%;">
+                <!-- Sommaire -->
+                <div class="card mb-5">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="card-title mb-0"><i class="bi bi-list-ul me-2"></i>Sommaire</h3>
                     </div>
-                    <p class="mt-4">
-                        Nancy Spot est une application répartie basée sur java RMI qui communique avec des API. L'application
-                        permet d'afficher sur une carte plusieurs informations concernant la ville de Nancy tel que
-                        des restaurants que on peut réserver, des stations Vélib et leurs données en temps réel, et enfin les incidents de circulation à nancy.
-                    </p>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ol class="list-unstyled">
+                                    <li><a href="#presentation" class="text-decoration-none">1. Présentation du projet</a></li>
+                                    <li><a href="#architecture" class="text-decoration-none">2. Architecture technique</a></li>
+                                    <li><a href="#fonctionnalites" class="text-decoration-none">3. Fonctionnalités réalisées</a></li>
+                                    <li><a href="#technologies" class="text-decoration-none">4. Technologies utilisées</a></li>
+                                </ol>
+                            </div>
+                            <div class="col-md-6">
+                                <ol class="list-unstyled" start="5">
+                                    <li><a href="#utilisation" class="text-decoration-none">5. Guide d'utilisation</a></li>
+                                    <li><a href="#deploiement" class="text-decoration-none">6. Déploiement</a></li>
+                                    <li><a href="#difficultés" class="text-decoration-none">7. Difficultés rencontrées</a></li>
+                                    <li><a href="#git" class="text-decoration-none">8. Code source</a></li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1. Présentation du projet -->
+                <section id="presentation" class="mb-5">
+                    <h3 class="text-primary mb-4"><i class="bi bi-info-circle me-2"></i>1. Présentation du projet</h3>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Objectif</h5>
+                            <p>
+                                Nancy Spot est une application répartie basée sur java RMI qui communique avec des API.
+                                L'application permet d'afficher sur une carte plusieurs informations concernant la ville de
+                                Nancy tel que des restaurants que on peut réserver, des stations Vélib et leurs données
+                                en temps réel, et enfin les incidents de circulation à nancy.
+                            </p>
+
+
+                            <section class="mb-5">
+                                <div class="row">
+                                    <div class="col-lg-6 mb-4">
+                                        <h5>Communication RMI</h5>
+                                        <p>
+                                            Les services communiquent avec RMI :
+                                        </p>
+                                        <ul>
+                                            <li>Le Service Central a un registre RMI sur le port 1098 (que on choisit)</li>
+                                            <li>Les services BD et Proxy s'enregistrent au démarrage</li>
+                                            <li>On peut ping pour vérifier la disponibilité des services</li>
+                                            <li>Désenregistrement automatique en cas de non réponses </li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-lg-6 mb-4">
+                                        <h5>API</h5>
+                                        <p>
+                                            Le frontend communique avec le Service Central via HTTP/HTTPS :
+                                        </p>
+                                        <ul>
+                                            <li>Endpoints pour chaque fonctionnalité</li>
+                                            <li>Support CORS</li>
+                                            <li>Réponses JSON</li>
+                                            <li>Gestion d'erreurs</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <section id="architecture" class="mb-5">
+                        <h3 class="text-primary mb-4"><i class="bi bi-diagram-3 me-2"></i>2. Architecture</h3>
+
+                        <div class="text-center mb-4">
+                            <img src="images/architecture-generale.png"
+                                 alt="Architecture générale Nancy Spot"
+                                 class="img-fluid rounded shadow-lg"
+                                 style="max-width: 100%;">
+                        </div>
+
+                        <!-- Diagrammes de classes -->
+                        <div class="accordion mt-4" id="architectureAccordion">
+                            <!-- Service BD -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#collapseBD" aria-expanded="true">
+                                        <i class="bi bi-diagram-3 me-2"></i>Diagramme de classes - Service BD
+                                    </button>
+                                </h2>
+                                <div id="collapseBD" class="accordion-collapse collapse show"
+                                     data-bs-parent="#architectureAccordion">
+                                    <div class="accordion-body">
+                                        <img src="images/diagramme-classes-service-bd.png"
+                                             alt="Diagramme de classes Service BD"
+                                             class="img-fluid rounded"
+                                             style="max-width: 100%;">
+                                        <p class="mt-3">
+                                            Le Service BD implémente l'interface ServiceBD et utilise le pattern DAO
+                                            pour gérer l'accès aux données. Il gère les entités Restaurant, TableResto,
+                                            Creneau et Reservation avec leurs relations.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Service Central -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#collapseCentral">
+                                        <i class="bi bi-diagram-3 me-2"></i>Diagramme de classes - Service Central
+                                    </button>
+                                </h2>
+                                <div id="collapseCentral" class="accordion-collapse collapse"
+                                     data-bs-parent="#architectureAccordion">
+                                    <div class="accordion-body">
+                                        <img src="images/diagramme-classes-service-central.png"
+                                             alt="Diagramme de classes Service Central"
+                                             class="img-fluid rounded"
+                                             style="max-width: 100%;">
+                                        <p class="mt-3">
+                                            Le Service Central donne des endpoints HTTP
+                                            via des handlers que on a codé. Il a dans son annuaire les références distantes des services
+                                            RMI.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Service Proxy -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#collapseProxy">
+                                        <i class="bi bi-diagram-3 me-2"></i>Diagramme de classes - Service Proxy
+                                    </button>
+                                </h2>
+                                <div id="collapseProxy" class="accordion-collapse collapse"
+                                     data-bs-parent="#architectureAccordion">
+                                    <div class="accordion-body">
+                                        <img src="images/diagramme-classes-service-proxy.png"
+                                             alt="Diagramme de classes Service Proxy"
+                                             class="img-fluid rounded"
+                                             style="max-width: 100%;">
+                                        <p class="mt-3">
+                                            Le Service Proxy utilise le pattern Strategy avec BaseHttpClient pour
+                                            gérer différentes sources de données externes. (ici on gère que les incidents, mais on peut facilement ajouter d'autre API)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </section>
 
-                <!-- Composants principaux -->
-                <section class="mb-5">
-                    <h3 class="text-primary mb-4">Composants principaux</h3>
+                <!-- 3. Fonctionnalités réalisées -->
+                <section id="fonctionnalites" class="mb-5">
+                    <h3 class="text-primary mb-4"><i class="bi bi-check2-square me-2"></i>3. Fonctionnalités réalisées</h3>
 
-                    <div class="row g-4 mb-4">
+                    <div class="row g-4">
+                        <!-- Restaurants et réservations -->
                         <div class="col-md-6">
-                            <div class="card h-100 shadow-sm">
+                            <div class="card h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="bi bi-shop me-2"></i>Restaurants & Réservations</h6>
+                                </div>
                                 <div class="card-body">
-                                    <h5 class="card-title text-primary">
-                                        <i class="bi bi-globe me-2"></i>Frontend (Webetu)
-                                    </h5>
-                                    <p class="card-text">
-                                        Interface en JavaScript ES6 avec les modules :
-                                    </p>
-                                    <ul class="small">
-                                        <li>Leaflet pour la carte interactive</li>
-                                        <li>Bootstrap 5 pour le css</li>
-                                        <li>Handlebars pour le templating</li>
-                                        <li>Fetch pour les requêtes HTTP/HTTPS</li>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">✅ Affichage des restaurants sur carte</li>
+                                        <li class="mb-2">✅ Système de réservation</li>
+                                        <li class="mb-2">✅ Avec gestion des créneaux horaires</li>
+                                        <li class="mb-2">✅ Sélection des tables</li>
+                                        <li class="mb-2">✅ Validation des disponibilités</li>
+                                        <li class="mb-2">✅ Interface de réservation</li>
+                                        <li class="mb-2">✅ Vérification des contraintes (capacité, conflits)</li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Données temps réel -->
                         <div class="col-md-6">
-                            <div class="card h-100 shadow-sm">
+                            <div class="card h-100">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="bi bi-clock me-2"></i>Données Temps Réel</h6>
+                                </div>
                                 <div class="card-body">
-                                    <h5 class="card-title text-success">
-                                        <i class="bi bi-server me-2"></i>Service Central
-                                    </h5>
-                                    <p class="card-text">
-                                        Serveur HTTP/HTTPS servant de passerelle entre le frontend et les services RMI :
-                                    </p>
-                                    <ul class="small">
-                                        <li>Donne les endpoints au frontend</li>
-                                        <li>A un registre RMI (port 1098, on peut le choisir librement)</li>
-                                        <li>Gère les services BD et Proxy</li>
-                                        <li>Support HTTPS avec certificat auto-signé</li>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">✅ Stations Vélib avec disponibilités</li>
+                                        <li class="mb-2">✅ Nombre de vélos/places en temps réel</li>
+                                        <li class="mb-2">✅ Incidents de circulation Grand Nancy</li>
+                                        <li class="mb-2">✅ Catégorisation des incidents</li>
+                                        <li class="mb-2">✅ Géolocalisation précise</li>
+                                        <li class="mb-2">✅ Actualisation automatique</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interface utilisateur -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="bi bi-laptop me-2"></i>Interface Utilisateur</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">✅ Carte Leaflet</li>
+                                        <li class="mb-2">✅ Bootstrap 5</li>
+                                        <li class="mb-2">✅ Filtres par type de données</li>
+                                        <li class="mb-2">✅ Popups pour les informations</li>
+                                        <li class="mb-2">✅ Onglet carte/compte rendu</li>
+                                        <li class="mb-2">✅ Templates Handlebars</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Aspects techniques -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="bi bi-gear me-2"></i>Aspects Techniques</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">✅ Architecture RMI distribuée</li>
+                                        <li class="mb-2">✅ Support HTTPS avec certificats</li>
+                                        <li class="mb-2">✅ Configuration via variables d'environnement</li>
+                                        <li class="mb-2">✅ Bonne gestion d'erreurs</li>
+                                        <li class="mb-2">✅ Scripts de déploiement automatisés (MakeFile)</li>
+                                        <li class="mb-2">✅ Base de données Oracle</li>
+                                        <li class="mb-2">✅ Endpoint sur le bon fonctionnement des services</li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Statistiques temps réel -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Statistiques actuelles</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-primary bg-opacity-10 rounded">
+                                        <i class="bi bi-shop fs-2 text-primary"></i>
+                                        <div class="h4 mb-0">{{#if stats}}{{stats.restaurants}}{{else}}0{{/if}}</div>
+                                        <small class="text-muted">Restaurants</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-success bg-opacity-10 rounded">
+                                        <i class="bi bi-bicycle fs-2 text-success"></i>
+                                        <div class="h4 mb-0">{{#if stats}}{{stats.velib}}{{else}}0{{/if}}</div>
+                                        <small class="text-muted">Stations Vélib</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-warning bg-opacity-10 rounded">
+                                        <i class="bi bi-exclamation-triangle fs-2 text-warning"></i>
+                                        <div class="h4 mb-0">{{#if stats}}{{stats.incidents}}{{else}}0{{/if}}</div>
+                                        <small class="text-muted">Incidents</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. Technologies utilisées -->
+                <section id="technologies" class="mb-5">
+                    <h3 class="text-primary mb-4"><i class="bi bi-stack me-2"></i>4. Technologies utilisées</h3>
+
+                    <div class="row g-4">
+                        <!-- Backend -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="mb-0">Backend / Services</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr><td><strong>Java</strong></td><td>Version 17 (LTS)</td></tr>
+                                        <tr><td><strong>RMI</strong></td><td>Communication distante</td></tr>
+                                        <tr><td><strong>Maven</strong></td><td>Gestion des dépendances</td></tr>
+                                        <tr><td><strong>Oracle DB</strong></td><td>Base de données (celle de charlemagne)</td></tr>
+                                        <tr><td><strong>JDBC</strong></td><td>Oracle</td></tr>
+                                        <tr><td><strong>JSON</strong></td><td>format de l'API</td></tr>
+                                        <tr><td><strong>HTTP Server</strong></td><td>com.sun.net.httpserver</td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Frontend -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">Frontend / Interface</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr><td><strong>JavaScript</strong></td><td>ES6 avec les modules</td></tr>
+                                        <tr><td><strong>Leaflet</strong></td><td>Carte</td></tr>
+                                        <tr><td><strong>Bootstrap</strong></td><td>Version 5.3.0</td></tr>
+                                        <tr><td><strong>Handlebars</strong></td><td>Templating</td></tr>
+                                        <tr><td><strong>Fetch API</strong></td><td>Requêtes HTTP</td></tr>
+                                        <tr><td><strong>CSS</strong></td><td>Mise en page</td></tr>
+                                        <tr><td><strong>Webetu</strong></td><td>Hébergement du frontend</td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- APIs externes -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">APIs Externes</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr><td><strong>Cyclocity GBFS</strong></td><td>Données Vélib Nancy</td></tr>
+                                        <tr><td><strong>Grand Nancy</strong></td><td>Incidents circulation</td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Outils -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">Outils & Déploiement</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr><td><strong>Git</strong></td><td>Contrôle de version</td></tr>
+                                        <tr><td><strong>Make</strong></td><td>Automatisation compilation</td></tr>
+                                        <tr><td><strong>SSL/TLS</strong></td><td>Certificats auto-signés</td></tr>
+                                        <tr><td><strong>Proxy IUT</strong></td><td>Accès réseau (configurable)</td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. Guide d'utilisation -->
+                <section id="utilisation" class="mb-5">
+                    <h3 class="text-primary mb-4"><i class="bi bi-book me-2"></i>5. Guide d'utilisation</h3>
+
+                    <!-- Configuration -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Configuration initiale</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>1. Prérequis</h6>
+                            <ul>
+                                <li>Java 17+ installé</li>
+                                <li>Maven 3.8+ pour la compilation</li>
+                                <li>Accès à la base Oracle (Charlemagne)</li>
+                                <li>Make pour les scripts automatisés</li>
+                            </ul>
+
+                            <h6>2. Configuration des variables d'environnement</h6>
+                            <div class="bg-light p-3 rounded">
+                                <pre><code># Service Central
+CENTRAL_HOST=votre_ip_machine
+CENTRAL_HTTPS_ENABLED=true
+CENTRAL_HTTPS_PORT=8443
+
+# Base de Données
+BD_JDBC_URL=jdbc:oracle:thin:@charlemagne.iutnc.univ-lorraine.fr:1521:infodb
+BD_JDBC_USER=votre_login
+BD_JDBC_PASSWORD=votre_password
+
+# Webetu (pour déploiement frontend)
+WEBETU_USER=votre_login_webetu</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Démarrage -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Démarrage de l'application</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Démarrage automatique (recommandé)</h6>
+                                    <div class="bg-light p-3 rounded">
+                                        <pre><code># Déploiement complet backend
+make deploy
+
+# Déploiement frontend sur webetu
+make deploy-frontend</code></pre>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Démarrage manuel</h6>
+                                    <div class="bg-light p-3 rounded">
+                                        <pre><code># Compilation
+mvn clean package
+
+# Service Central (Terminal 1)
+cd service-central
+java -cp "target/*:../common/target/*" Main
+
+# Service BD (Terminal 2)
+cd service-bd
+java -cp "target/*:../common/target/*" Main
+
+# Service Proxy (Terminal 3)
+cd service-proxy
+java -cp "target/*:../common/target/*" Main</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Utilisation de l'interface -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Utilisation de l'interface</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Navigation sur la carte</h6>
+                                    <ul>
+                                        <li>Utilisez les filtres pour afficher/masquer les types de données</li>
+                                        <li>Cliquez sur les marqueurs pour voir les détails</li>
+                                        <li>Bouton "Actualiser" pour rafraîchir les données</li>
+                                    </ul>
+
+                                    <h6>Effectuer une réservation</h6>
+                                    <ol>
+                                        <li>Cliquez sur un restaurant (les marqueurs bleu)</li>
+                                        <li>Cliquez sur Réserver une table</li>
+                                        <li>Sélectionnez une date</li>
+                                        <li>Choisissez un créneau horaire</li>
+                                        <li>Sélectionnez une table disponible</li>
+                                        <li>Remplissez vos informations</li>
+                                        <li>Confirmez la réservation</li>
+                                    </ol>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Informations disponibles</h6>
+                                    <ul>
+                                        <li><strong>Restaurants</strong> : Nom, adresse, téléphone, disponibilités</li>
+                                        <li><strong>Vélib</strong> : Vélos disponibles, places libres, statut</li>
+                                        <li><strong>Incidents</strong> : Type, description, impact, localisation</li>
+                                    </ul>
+
+                                    <h6>Commandes utiles</h6>
+                                    <div class="bg-light p-2 rounded small">
+                                        <pre><code># Statut des services
+make status
+
+# Voir les logs
+make logs
+
+# Test de santé
+make health</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 6. Déploiement -->
+                <section id="deploiement" class="mb-5">
+                    <h3 class="text-primary mb-4"><i class="bi bi-cloud-upload me-2"></i>6. Déploiement</h3>
 
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <div class="card h-100 shadow-sm">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">Services Backend</h6>
+                                </div>
                                 <div class="card-body">
-                                    <h5 class="card-title text-warning">
-                                        <i class="bi bi-database me-2"></i>Service BD
-                                    </h5>
-                                    <p class="card-text">
-                                        Service RMI gérant l'accès à la base de données Oracle :
-                                    </p>
-                                    <ul class="small">
-                                        <li>Gestion des restaurants et réservations</li>
-                                        <li>Avec créneaux horaires (ex. déjeuner, dîner)</li>
-                                        <li>Gestion des transactions</li>
-                                        <li>Utilisation de DAO pour l'accès aux données</li>
+                                    <p><strong>Hébergement :</strong>Machines de l'iut</p>
+                                    <p><strong>Ports utilisés :</strong></p>
+                                    <ul>
+                                        <li>1098 : Registre RMI</li>
+                                        <li>8080 : Service Central HTTP</li>
+                                        <li>8443 : Service Central HTTPS</li>
                                     </ul>
+                                    <p><strong>Configuration :</strong> Via fichier .env et variables d'environnement</p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-md-6">
-                            <div class="card h-100 shadow-sm">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">Frontend</h6>
+                                </div>
                                 <div class="card-body">
-                                    <h5 class="card-title text-danger">
-                                        <i class="bi bi-cloud-arrow-down me-2"></i>Service Proxy
-                                    </h5>
+                                    <p><strong>Hébergement :</strong> Webetu (webetu.iutnc.univ-lorraine.fr)</p>
+                                    <p><strong>URL d'accès :</strong></p>
+                                    <div class="bg-light p-2 rounded small">
+                                        <code>https://webetu.iutnc.univ-lorraine.fr/~login/NancySpot/</code>
+                                    </div>
+                                    <p><strong>Déploiement :</strong> Automatique avec <code>make deploy-frontend</code></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Architecture de déploiement</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-primary bg-opacity-10 rounded">
+                                        <h6>Frontend</h6>
+                                        <p class="small mb-0">Webetu<br>Fichiers statiques<br>JavaScript/CSS</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-success bg-opacity-10 rounded">
+                                        <h6>Services Backend</h6>
+                                        <p class="small mb-0">Machine locale/serveur<br>JVM Java 17<br>Ports 1098, 8080, 8443</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-warning bg-opacity-10 rounded">
+                                        <h6>Base de Données</h6>
+                                        <p class="small mb-0">Oracle<br>Port 1521<br>Nous avons fait notre propre shémat</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 7. Difficultés rencontrées -->
+                <section id="difficultés" class="mb-5">
+                    <h3 class="text-primary mb-4"><i class="bi bi-exclamation-triangle me-2"></i>7. Difficultés rencontrées et solutions</h3>
+
+                    <div class="accordion" id="difficultesAccordion">
+                        <!-- Communication RMI -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseRMI" aria-expanded="true">
+                                    Communication RMI entre services
+                                </button>
+                            </h2>
+                            <div id="collapseRMI" class="accordion-collapse collapse show"
+                                 data-bs-parent="#difficultesAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-danger">Problèmes rencontrés</h6>
+                                            <ul>
+                                                <li>Configuration des hostnames RMI</li>
+                                                <li>Gestion des déconnexions de services</li>
+                                                <li>Synchronisation des enregistrements</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-success">Solutions apportées</h6>
+                                            <ul>
+                                                <li>Property java.rmi.server.hostname configurée</li>
+                                                <li>Ping et désenregistrement automatique</li>
+                                                <li>Shutdown hooks pour quitter de manière propre</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CORS et HTTPS -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseCORS">
+                                    CORS et accès HTTPS depuis Webetu
+                                </button>
+                            </h2>
+                            <div id="collapseCORS" class="accordion-collapse collapse"
+                                 data-bs-parent="#difficultesAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-danger">Problèmes rencontrés</h6>
+                                            <ul>
+                                                <li>Blocage CORS du navigateur</li>
+                                                <li>Erreur demandant un Certificat</li>
+                                                <li>Requêtes preflight OPTIONS</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-success">Solutions apportées</h6>
+                                            <ul>
+                                                <li>Filtre CORS configuré sur tous les endpoints</li>
+                                                <li>Génération de certificats + accepter le certificat</li>
+                                                <li>Gestion des requêtes OPTIONS dans les handlers</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gestion des APIs externes -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseAPIs">
+                                    Intégration des API externes
+                                </button>
+                            </h2>
+                            <div id="collapseAPIs" class="accordion-collapse collapse"
+                                 data-bs-parent="#difficultesAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-danger">Problèmes rencontrés</h6>
+                                            <ul>
+                                                <li>Proxy réseau de l'IUT</li>
+                                                <li>Latence et timeouts</li>
+                                                <li>Problèmes CORS</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-success">Solutions apportées</h6>
+                                            <ul>
+                                                <li>Configuration proxy avec variables d'environnement</li>
+                                                <li>Timeouts configurables et gestion d'erreurs</li>
+                                                <li>Appel API GBFS Cyclocity sur le serveur</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Base de données -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseDB">
+                                    Gestion des réservations et transactions
+                                </button>
+                            </h2>
+                            <div id="collapseDB" class="accordion-collapse collapse"
+                                 data-bs-parent="#difficultesAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-danger">Problèmes rencontrés</h6>
+                                            <ul>
+                                                <li>Conflits de réservation simultanées</li>
+                                                <li>Gestion des créneaux horaires</li>
+                                                <li>Validation des contraintes métier</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-success">Solutions apportées</h6>
+                                            <ul>
+                                                <li>Transactions avec vérification avant insertion</li>
+                                                <li>Contraintes UNIQUE en base de données</li>
+                                                <li>Validation côté serveur et client</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 8. Code source -->
+                <section id="git" class="mb-5">
+                    <h3 class="text-primary mb-4"><i class="bi bi-github me-2"></i>8. Code source et ressources</h3>
+
+                    <div class="row g-4">
+                        <!-- Dépôt Git -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-dark text-white">
+                                    <h6 class="mb-0"><i class="bi bi-git me-2"></i>Dépôt Git</h6>
+                                </div>
+                                <div class="card-body">
                                     <p class="card-text">
-                                        Service RMI pour l'accès aux API externes :
+                                        <strong>URL du dépôt :</strong><br>
+                                        <a href="https://github.com/korban2u/NancySpot" target="_blank" class="btn btn-outline-primary">
+                                            <i class="bi bi-github me-2"></i>github.com/korban2u/NancySpot
+                                        </a>
                                     </p>
-                                    <ul class="small">
-                                        <li>Récupération des incidents Grand Nancy</li>
-                                        <li>On peut utiliser facilement le proxy de l'IUT</li>
-                                        <li>Transforme les données</li>
-                                        <li>Gère les erreurs réseau</li>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Documentation -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="bi bi-book me-2"></i>Documentation</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <i class="bi bi-file-text me-2"></i>
+                                            <strong>README.md</strong> : Tuto d'installation et d'utilisation
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-gear me-2"></i>
+                                            <strong>Makefile</strong> : Scripts d'automatisation
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-database me-2"></i>
+                                            <strong>create_tables.sql</strong> : Schema de la base de données
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-code-square me-2"></i>
+                                            <strong>Javadoc</strong> : Documentation API Java (faire make javadoc)
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </section>
 
-                <!-- Diagrammes de classes -->
-                <section class="mb-5">
-                    <h3 class="text-primary mb-4">Digrammes de classes</h3>
-
-                    <div class="accordion" id="architectureAccordion">
-                        <!-- Service BD -->
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                        data-bs-target="#collapseBD" aria-expanded="true">
-                                    <i class="bi bi-diagram-3 me-2"></i>Diagramme de classes - Service BD
-                                </button>
-                            </h2>
-                            <div id="collapseBD" class="accordion-collapse collapse show"
-                                 data-bs-parent="#architectureAccordion">
-                                <div class="accordion-body">
-                                    <img src="images/diagramme-classes-service-bd.png"
-                                         alt="Diagramme de classes Service BD"
-                                         class="img-fluid rounded"
-                                         style="max-width: 100%;">
-                                    <p class="mt-3">
-                                        Le Service BD implémente l'interface ServiceBD et utilise le pattern DAO
-                                        pour gérer l'accès aux données. Il gère les entités Restaurant, TableResto,
-                                        Creneau et Reservation avec leurs relations.
-                                    </p>
+                        <!-- Structure du projet -->
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Structure du projet</h6>
                                 </div>
-                            </div>
-                        </div>
+                                <div class="card-body">
 
-                        <!-- Service Central -->
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                        data-bs-target="#collapseCentral">
-                                    <i class="bi bi-diagram-3 me-2"></i>Diagramme de classes - Service Central
-                                </button>
-                            </h2>
-                            <div id="collapseCentral" class="accordion-collapse collapse"
-                                 data-bs-parent="#architectureAccordion">
-                                <div class="accordion-body">
-                                    <img src="images/diagramme-classes-service-central.png"
-                                         alt="Diagramme de classes Service Central"
-                                         class="img-fluid rounded"
-                                         style="max-width: 100%;">
-                                    <p class="mt-3">
-                                        Le Service Central donne des endpoints HTTP
-                                        via des handlers que on a codé. Il a dans son annuaire les références distantes des services
-                                        RMI.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                                                <pre><code>nancy-spot/
+├── common/                 # Interfaces RMI partagées
+├── service-central/        # Service HTTP/RMI central
+├── service-bd/            # Service base de données
+├── service-proxy/         # Service APIs externes
+├── frontend/              # Interface web
+├── docker/               # Configuration Docker (impossible sur les machines de l'iut donc abandonnée)
+├── Makefile              # Scripts automatisation
+├── README.md             # Documentation
+└── .env.exemple          # Template configuration</code></pre>
 
-                        <!-- Service Proxy -->
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                        data-bs-target="#collapseProxy">
-                                    <i class="bi bi-diagram-3 me-2"></i>Diagramme de classes - Service Proxy
-                                </button>
-                            </h2>
-                            <div id="collapseProxy" class="accordion-collapse collapse"
-                                 data-bs-parent="#architectureAccordion">
-                                <div class="accordion-body">
-                                    <img src="images/diagramme-classes-service-proxy.png"
-                                         alt="Diagramme de classes Service Proxy"
-                                         class="img-fluid rounded"
-                                         style="max-width: 100%;">
-                                    <p class="mt-3">
-                                        Le Service Proxy utilise le pattern Strategy avec BaseHttpClient pour
-                                        gérer différentes sources de données externes. (ici on gère que les incidents, mais on peut facilement ajouter d'autre API)
-                                    </p>
+
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- Communication entre services -->
-                <section class="mb-5">
-                    <h3 class="text-primary mb-4">Communication</h3>
-                    <div class="row">
-                        <div class="col-lg-6 mb-4">
-                            <h5>Communication RMI</h5>
-                            <p>
-                                Les services communiquent avec RMI :
-                            </p>
-                            <ul>
-                                <li>Le Service Central a un registre RMI sur le port 1098 (que on choisit)</li>
-                                <li>Les services BD et Proxy s'enregistrent au démarrage</li>
-                                <li>On peut ping pour vérifier la disponibilité des services</li>
-                                <li>Dés enregistrement automatique en cas de non réponses </li>
-                            </ul>
-                        </div>
-                        <div class="col-lg-6 mb-4">
-                            <h5>API REST</h5>
-                            <p>
-                                Le frontend communique avec le Service Central via HTTP/HTTPS :
-                            </p>
-                            <ul>
-                                <li>Endpoints pour chaque fonctionnalité</li>
-                                <li>Support CORS</li>
-                                <li>Réponses JSON</li>
-                                <li>Gestion d'erreurs</li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Technologies utilisées -->
-                <section class="mb-5">
-                    <h3 class="text-primary mb-4">Technologies</h3>
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <i class="bi bi-cup-hot fs-1 text-primary"></i>
-                                <h6 class="mt-2">Java 17</h6>
-                                <small class="text-muted">Services Java</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <i class="bi bi-database fs-1 text-warning"></i>
-                                <h6 class="mt-2">Oracle DB</h6>
-                                <small class="text-muted">Base de donnée</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <i class="bi bi-braces fs-1 text-success"></i>
-                                <h6 class="mt-2">JavaScript ES6</h6>
-                                <small class="text-muted">Frontend</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <i class="bi bi-box fs-1 text-info"></i>
-                                <h6 class="mt-2">Maven</h6>
-                                <small class="text-muted">Compilation</small>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Points clés -->
-                <section class="mb-5">
-                    <h3 class="text-primary mb-4">Points IMPORTANTS de l'architecture</h3>
-                    <div class="alert alert-info">
-                        <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Modularité</h6>
-                        <p class="mb-0">
-                            Chaque service est indépendant et peut être lancé séparément. Le module common
-                            contient les interfaces et modèles partagés.
-                        </p>
-                    </div>
-                    <div class="alert alert-success">
-                        <h6 class="alert-heading"><i class="bi bi-shield-check me-2"></i>Sécurité</h6>
-                        <p class="mb-0">
-                            Support HTTPS avec certificats SSL, validation des données côté serveur,
-                            et support des transactions pour les réservations.
-                        </p>
-                    </div>
-                    <div class="alert alert-warning">
-                        <h6 class="alert-heading"><i class="bi bi-arrow-repeat me-2"></i>Gestion des erreurs</h6>
-                        <p class="mb-0">
-                            Gestion des bugs avec désenregistrement automatique, timeouts configurables,
-                            et retry en cas de non réponse.
-                        </p>
-                    </div>
-                </section>
             </div>
         </div>
     </div>
