@@ -255,24 +255,41 @@ class NancyApp {
         UIUtils.showLoading(true);
 
         try {
-            // Vérifier l'état des services backend uniquement
-            const status = await this.api.get(NANCY_CONFIG.ENDPOINTS.STATUS);
-            console.log('État des services:', status);
+            // Vérifier l'état des services backend de manière non bloquante
+            let status = { serviceBD: { disponible: false }, serviceProxy: { disponible: false } };
+
+            try {
+                status = await this.api.get(NANCY_CONFIG.ENDPOINTS.STATUS);
+                console.log('État des services:', status);
+            } catch (backendError) {
+                console.warn('Services backend non disponibles:', backendError);
+                UIUtils.showToast('Services backend non disponibles, données limitées', 'warning');
+            }
 
             const promises = [];
 
             // Restaurants : dépend du service BD
             if (status.serviceBD?.disponible) {
-                promises.push(this.restaurantManager.loadRestaurants());
+                promises.push(this.restaurantManager.loadRestaurants().catch(err => {
+                    console.error('Erreur chargement restaurants:', err);
+                    return [];
+                }));
             }
 
             // Incidents : dépend du service proxy
             if (status.serviceProxy?.disponible) {
-                promises.push(this.incidentManager.loadIncidents());
+                promises.push(this.incidentManager.loadIncidents().catch(err => {
+                    console.error('Erreur chargement incidents:', err);
+                    return [];
+                }));
             }
 
-            // Vélib : directement depuis l'API externe (indépendant du backend)
-            promises.push(this.velibManager.loadStations());
+            // Vélib : TOUJOURS chargé car indépendant du backend
+            promises.push(this.velibManager.loadStations().catch(err => {
+                console.error('Erreur chargement Vélib:', err);
+                UIUtils.showToast('Impossible de charger les données Vélib', 'warning');
+                return [];
+            }));
 
             await Promise.all(promises);
 
@@ -290,11 +307,14 @@ class NancyApp {
                 this.updateCompteRendu();
             }
 
-            UIUtils.showToast('Données chargées avec succès', 'success');
+            // Message de succès adapté selon ce qui a été chargé
+            const hasBackend = status.serviceBD?.disponible || status.serviceProxy?.disponible;
+            const message = hasBackend ? 'Données chargées avec succès' : 'Données Vélib chargées (backend indisponible)';
+            UIUtils.showToast(message, hasBackend ? 'success' : 'info');
 
         } catch (error) {
-            console.error('Erreur chargement données:', error);
-            UIUtils.showToast('Erreur lors du chargement', 'danger');
+            console.error('Erreur critique lors du chargement:', error);
+            UIUtils.showToast('Erreur critique lors du chargement', 'danger');
         } finally {
             UIUtils.showLoading(false);
         }
