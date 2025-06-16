@@ -255,69 +255,86 @@ class NancyApp {
         UIUtils.showLoading(true);
 
         try {
-            // Vérifier l'état des services backend de manière non bloquante
-            let status = { serviceBD: { disponible: false }, serviceProxy: { disponible: false } };
+            // Vérifier le status en arrière-plan
+            const statusPromise = this.api.get(NANCY_CONFIG.ENDPOINTS.STATUS)
+                .catch(err => {
+                    console.warn('Services backend non disponibles:', err);
+                    return { serviceBD: { disponible: false }, serviceProxy: { disponible: false } };
+                });
 
-            try {
-                status = await this.api.get(NANCY_CONFIG.ENDPOINTS.STATUS);
-                console.log('État des services:', status);
-            } catch (backendError) {
-                console.warn('Services backend non disponibles:', backendError);
-                UIUtils.showToast('Services backend non disponibles, données limitées', 'warning');
-            }
+            // 1. Charger et afficher Vélib immédiatement (indépendant du backend)
+            this.velibManager.loadStations()
+                .then(stations => {
+                    if (this.state.filters.velib && stations.length > 0) {
+                        this.velibManager.displayOnMap();
+                        this.updateStats();
+                    }
+                })
+                .catch(err => {
+                    console.error('Erreur chargement Vélib:', err);
+                    UIUtils.showToast('Impossible de charger les données Vélib', 'warning');
+                });
 
-            const promises = [];
+            // 2. Attendre le status puis charger le reste
+            const status = await statusPromise;
+            console.log('État des services:', status);
 
-            // Restaurants : dépend du service BD
+            // 3. Charger restaurants si BD disponible
             if (status.serviceBD?.disponible) {
-                promises.push(this.restaurantManager.loadRestaurants().catch(err => {
-                    console.error('Erreur chargement restaurants:', err);
-                    return [];
-                }));
+                this.restaurantManager.loadRestaurants()
+                    .then(restaurants => {
+                        // Charger aussi les créneaux
+                        return this.restaurantManager.loadCreneaux().then(() => restaurants);
+                    })
+                    .then(restaurants => {
+                        if (this.state.filters.restaurants && restaurants.length > 0) {
+                            this.restaurantManager.displayOnMap();
+                            this.updateStats();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erreur chargement restaurants:', err);
+                    });
             }
 
-            // Incidents : dépend du service proxy
+            // 4. Charger incidents si Proxy disponible
             if (status.serviceProxy?.disponible) {
-                promises.push(this.incidentManager.loadIncidents().catch(err => {
-                    console.error('Erreur chargement incidents:', err);
-                    return [];
-                }));
+                this.incidentManager.loadIncidents()
+                    .then(incidents => {
+                        if (this.state.filters.incidents && incidents.length > 0) {
+                            this.incidentManager.displayOnMap();
+                            this.updateStats();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erreur chargement incidents:', err);
+                    });
             }
 
-            // Vélib : TOUJOURS chargé car indépendant du backend
-            promises.push(this.velibManager.loadStations().catch(err => {
-                console.error('Erreur chargement Vélib:', err);
-                UIUtils.showToast('Impossible de charger les données Vélib', 'warning');
-                return [];
-            }));
-
-            await Promise.all(promises);
-
-            // Afficher sur la carte
-            this.displayAllDataOnMap();
-
-            // Mettre à jour les stats
-            UIUtils.updateStats(
-                this.restaurantManager.restaurants,
-                this.velibManager.stations,
-                this.incidentManager.incidents
-            );
-
-            if (this.state.activeTab === 'compte-rendu') {
-                this.updateCompteRendu();
-            }
-
-            // Message de succès adapté selon ce qui a été chargé
-            const hasBackend = status.serviceBD?.disponible || status.serviceProxy?.disponible;
-            const message = hasBackend ? 'Données chargées avec succès' : 'Données Vélib chargées (backend indisponible)';
-            UIUtils.showToast(message, hasBackend ? 'success' : 'info');
+            // Message final
+            setTimeout(() => {
+                if (!status.serviceBD?.disponible && !status.serviceProxy?.disponible) {
+                    UIUtils.showToast('Données Vélib chargées (services backend indisponibles)', 'info');
+                } else {
+                    UIUtils.showToast('Données chargées avec succès', 'success');
+                }
+                UIUtils.showLoading(false);
+            }, 1000);
 
         } catch (error) {
             console.error('Erreur critique lors du chargement:', error);
             UIUtils.showToast('Erreur critique lors du chargement', 'danger');
-        } finally {
             UIUtils.showLoading(false);
         }
+    }
+
+// Méthode helper pour mettre à jour les stats
+    updateStats() {
+        UIUtils.updateStats(
+            this.restaurantManager.restaurants,
+            this.velibManager.stations,
+            this.incidentManager.incidents
+        );
     }
 
     /**
