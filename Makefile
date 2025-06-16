@@ -271,7 +271,7 @@ start-central: ## Démarrer service central
 	@if [ "$(CENTRAL_HTTPS_ENABLED)" = "true" ]; then \
 		echo "$(BLUE)Mode HTTPS activé sur port $(CENTRAL_HTTPS_PORT)$(NC)"; \
 	fi
-	@nohup java -Xmx1g -Djava.rmi.server.hostname=$(CENTRAL_HOST) \
+	@nohup java -Xmx1g \
 		-cp "$(CENTRAL_JAR):service-central/target/dependency/*:$(COMMON_JAR)" \
 		Main $(CONFIG_DIR)/central.properties > $(LOGS_DIR)/central.log 2>&1 & \
 	echo $$! > $(PIDS_DIR)/central.pid
@@ -290,7 +290,7 @@ start-bd: ## Démarrer service BD
 		echo "$(YELLOW)Service BD déjà démarré$(NC)"; exit 0; \
 	fi
 	@echo "$(YELLOW)Démarrage Service BD...$(NC)"
-	@nohup java -Xmx512m -Djava.rmi.server.hostname=$(CENTRAL_HOST) \
+	@nohup java -Xmx512 \
 		-cp "$(BD_JAR):service-bd/target/dependency/*:$(COMMON_JAR)" \
 		Main $(CONFIG_DIR)/bd.properties > $(LOGS_DIR)/bd.log 2>&1 & \
 	echo $$! > $(PIDS_DIR)/bd.pid
@@ -309,7 +309,7 @@ start-proxy: ## Démarrer service proxy
 		echo "$(YELLOW)Service Proxy déjà démarré$(NC)"; exit 0; \
 	fi
 	@echo "$(YELLOW)Démarrage Service Proxy...$(NC)"
-	@nohup java -Xmx512m -Djava.rmi.server.hostname=$(CENTRAL_HOST) \
+	@nohup java -Xmx512m \
 		-cp "$(PROXY_JAR):service-proxy/target/dependency/*:$(COMMON_JAR)" \
 		Main $(CONFIG_DIR)/proxy.properties > $(LOGS_DIR)/proxy.log 2>&1 & \
 	echo $$! > $(PIDS_DIR)/proxy.pid
